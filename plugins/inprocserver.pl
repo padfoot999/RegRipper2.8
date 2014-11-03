@@ -3,6 +3,8 @@
 # 
 #
 # History
+#   20141103 - updated to include detection for PowerLiks
+#   20141030 - added GDataSoftware reference
 #   20140808 - updated to scan Software & NTUSER.DAT/USRCLASS.DAT hives
 #   20130603 - updated alert functionality
 #   20130429 - added alertMsg() functionality
@@ -19,8 +21,10 @@
 #   "\\.\globalroot...", hence the match function.
 #
 #   http://www.secureworks.com/cyber-threat-intelligence/threats/malware-analysis-of-the-lurk-downloader/
+#   https://blog.gdatasoftware.com/blog/article/com-object-hijacking-the-discreet-way-of-persistence.html  
 #
-# copyright 2012, Quantum Analytics Research, LLC
+# copyright 2012-2014, QAR, LLC
+# Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package inprocserver;
 use strict;
@@ -31,7 +35,7 @@ my %config = (hive          => "Software","NTUSER\.DAT","USRCLASS\.DAT",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20140808);
+              version       => 20141103);
 
 sub getConfig{return %config}
 
@@ -82,6 +86,17 @@ sub pluginmain {
 					eval {
 						my $n = $s->get_subkey("InprocServer32")->get_value("")->get_data();
 						alertCheckPath($n);
+					};
+
+# Powerliks
+# http://www.symantec.com/connect/blogs/trojanpoweliks-threat-inside-system-registry		
+# http://msdn.microsoft.com/en-us/library/windows/desktop/ms683844(v=vs.85).aspx			
+					eval {
+						my $local = $s->get_subkey("localServer");
+						my $powerliks = $local->get_value("")->get_data();
+						::rptMsg($s->get_name()."\\LocalServer32 key found\.");
+						::rptMsg("  LastWrite: ".gmtime($local->get_timestamp()));
+						::rptMsg("Possible PowerLiks found\.") if ($powerliks =~ m/^rundll32/)
 					};
 				
 				}

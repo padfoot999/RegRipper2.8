@@ -1,3 +1,6 @@
+20141103
+	-updated inprocserver.pl to include detection for PowerLiks
+
 20141015
 	-updated/modified usb.pl, usbstor.pl, wpdbusenum.pl
 

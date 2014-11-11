@@ -2,6 +2,7 @@
 # usbstor
 #
 # History:
+#   20141111 - updated check for key LastWrite times
 #		20141015 - added subkey LastWrite times
 #   20130630 - added FirstInstallDate, InstallDate query
 #   20080418 - created
@@ -20,7 +21,7 @@ my %config = (hive          => "System",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20141015);
+              version       => 20141111);
 
 sub getConfig{return %config}
 
@@ -74,11 +75,16 @@ sub pluginmain {
 					foreach my $k (@sk) {
 						my $serial = $k->get_name();
 						::rptMsg("  S/N: ".$serial." [".gmtime($k->get_timestamp())."]");
-# added 20141015						
-						::rptMsg("  Device Parameters LastWrite: [".gmtime($k->get_subkey("Device Parameters")->get_timestamp())."]");
-						::rptMsg("  LogConf LastWrite          : [".gmtime($k->get_subkey("LogConf")->get_timestamp())."]");
-						::rptMsg("  Properties LastWrite       : [".gmtime($k->get_subkey("Properties")->get_timestamp())."]");
-						
+# added 20141015; updated 20141111						
+						eval {
+							::rptMsg("  Device Parameters LastWrite: [".gmtime($k->get_subkey("Device Parameters")->get_timestamp())."]");
+						};
+						eval {
+							::rptMsg("  LogConf LastWrite          : [".gmtime($k->get_subkey("LogConf")->get_timestamp())."]");
+						};
+						eval {
+							::rptMsg("  Properties LastWrite       : [".gmtime($k->get_subkey("Properties")->get_timestamp())."]");
+						};
 						my $friendly;
 						eval {
 							$friendly = $k->get_value("FriendlyName")->get_data();

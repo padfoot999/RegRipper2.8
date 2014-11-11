@@ -4,6 +4,7 @@
 # 
 #
 # History:
+#  20141111 - updated check for key LastWrite times
 #  20141015 - added additional checks
 #  20120523 - Added support for a DeviceClasses subkey that includes 
 #             "WpdBusEnum" in the names; from MarkW and ColinC
@@ -20,7 +21,7 @@ my %config = (hive          => "System",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20141015);
+              version       => 20141111);
 
 sub getConfig{return %config}
 
@@ -89,11 +90,16 @@ sub pluginmain {
 							my $mfg = $k->get_value("Mfg")->get_data();
 							::rptMsg("  Mfg: ".$mfg) unless ($mfg eq "");
 						};
-# Added 20141015												
-						::rptMsg("  Device Parameters LastWrite: [".gmtime($k->get_subkey("Device Parameters")->get_timestamp())."]");
-						::rptMsg("  LogConf LastWrite          : [".gmtime($k->get_subkey("LogConf")->get_timestamp())."]");
-						::rptMsg("  Properties LastWrite       : [".gmtime($k->get_subkey("Properties")->get_timestamp())."]");
-						
+# added 20141015; updated 20141111						
+						eval {
+							::rptMsg("  Device Parameters LastWrite: [".gmtime($k->get_subkey("Device Parameters")->get_timestamp())."]");
+						};
+						eval {
+							::rptMsg("  LogConf LastWrite          : [".gmtime($k->get_subkey("LogConf")->get_timestamp())."]");
+						};
+						eval {
+							::rptMsg("  Properties LastWrite       : [".gmtime($k->get_subkey("Properties")->get_timestamp())."]");
+						};
 						eval {
 							my $t = $k->get_subkey("Properties\\{83da6326-97a6-4088-9453-a1923f573b29}\\00000064\\00000000")->get_value("Data")->get_data();
 							my ($t0,$t1) = unpack("VV",$t);

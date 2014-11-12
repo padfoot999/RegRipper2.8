@@ -1,3 +1,9 @@
+20141112
+	-created mixer.pl,mixer_tln.pl,audiodev.pl
+
+21041111
+	-updated usb.pl, usbstor.pl, wpdbusenum.pl
+
 20141103
 	-updated inprocserver.pl to include detection for PowerLiks
 

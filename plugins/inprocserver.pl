@@ -3,6 +3,7 @@
 # 
 #
 # History
+#   20141112 - added support for Wow6432Node
 #   20141103 - updated to include detection for PowerLiks
 #   20141030 - added GDataSoftware reference
 #   20140808 - updated to scan Software & NTUSER.DAT/USRCLASS.DAT hives
@@ -60,7 +61,7 @@ sub pluginmain {
   ::rptMsg("(".getHive().") ".getShortDescr()."\n"); # banner
 	my $reg = Parse::Win32Registry->new($hive);
 	my $root_key = $reg->get_root_key;
-  my @paths = ("Classes\\CLSID","CLSID");
+  my @paths = ("Classes\\CLSID","Wow6432Node\\Classes\\CLSID","CLSID","Wow6432Node\\CLSID");
   foreach my $key_path (@paths) {
 		my $key;
 		if ($key = $root_key->get_subkey($key_path)) {

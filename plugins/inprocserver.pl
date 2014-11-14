@@ -93,11 +93,14 @@ sub pluginmain {
 # http://www.symantec.com/connect/blogs/trojanpoweliks-threat-inside-system-registry		
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms683844(v=vs.85).aspx			
 					eval {
-						my $local = $s->get_subkey("localServer");
+						my $local = $s->get_subkey("localserver32");
 						my $powerliks = $local->get_value("")->get_data();
 						::rptMsg($s->get_name()."\\LocalServer32 key found\.");
 						::rptMsg("  LastWrite: ".gmtime($local->get_timestamp()));
-						::rptMsg("Possible PowerLiks found\.") if ($powerliks =~ m/^rundll32/)
+						if ($powerliks =~ m/^rundll32/) {
+							::rptMsg("**Possible PowerLiks found\.");
+							::rptMsg("  ".$powerliks);
+						}
 					};
 				
 				}

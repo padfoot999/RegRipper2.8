@@ -3,8 +3,9 @@
 # 
 #
 # History
+#   20141118 - Spelling correction on Poweliks malware
 #   20141112 - added support for Wow6432Node
-#   20141103 - updated to include detection for PowerLiks
+#   20141103 - updated to include detection for Poweliks
 #   20141030 - added GDataSoftware reference
 #   20140808 - updated to scan Software & NTUSER.DAT/USRCLASS.DAT hives
 #   20130603 - updated alert functionality
@@ -89,17 +90,17 @@ sub pluginmain {
 						alertCheckPath($n);
 					};
 
-# Powerliks
+# Poweliks
 # http://www.symantec.com/connect/blogs/trojanpoweliks-threat-inside-system-registry		
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms683844(v=vs.85).aspx			
 					eval {
 						my $local = $s->get_subkey("localserver32");
-						my $powerliks = $local->get_value("")->get_data();
+						my $poweliks = $local->get_value("")->get_data();
 						::rptMsg($s->get_name()."\\LocalServer32 key found\.");
 						::rptMsg("  LastWrite: ".gmtime($local->get_timestamp()));
-						if ($powerliks =~ m/^rundll32/) {
-							::rptMsg("**Possible PowerLiks found\.");
-							::rptMsg("  ".$powerliks);
+						if ($poweliks =~ m/^rundll32/) {
+							::rptMsg("**Possible Poweliks found\.");
+							::rptMsg("  ".$poweliks);
 						}
 					};
 				

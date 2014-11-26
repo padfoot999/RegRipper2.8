@@ -3,9 +3,9 @@
 # 
 #
 # History
-#   20141118 - Spelling correction on Poweliks malware
+#   20141126 - minor updates
 #   20141112 - added support for Wow6432Node
-#   20141103 - updated to include detection for Poweliks
+#   20141103 - updated to include detection for PowerLiks
 #   20141030 - added GDataSoftware reference
 #   20140808 - updated to scan Software & NTUSER.DAT/USRCLASS.DAT hives
 #   20130603 - updated alert functionality
@@ -37,7 +37,7 @@ my %config = (hive          => "Software","NTUSER\.DAT","USRCLASS\.DAT",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20141103);
+              version       => 20141126);
 
 sub getConfig{return %config}
 
@@ -62,7 +62,7 @@ sub pluginmain {
   ::rptMsg("(".getHive().") ".getShortDescr()."\n"); # banner
 	my $reg = Parse::Win32Registry->new($hive);
 	my $root_key = $reg->get_root_key;
-  my @paths = ("Classes\\CLSID","Wow6432Node\\Classes\\CLSID","CLSID","Wow6432Node\\CLSID");
+  my @paths = ("Classes\\CLSID","Classes\\Wow6432Node\\CLSID","CLSID","Wow6432Node\\CLSID");
   foreach my $key_path (@paths) {
 		my $key;
 		if ($key = $root_key->get_subkey($key_path)) {
@@ -81,26 +81,28 @@ sub pluginmain {
 						
 						my $l = $s->get_subkey("InprocServer32")->get_value("")->get_data();
 						$l =~ tr/[A-Z]/[a-z]/;
-						::rptMsg("Possible Lurk infection found!") unless ($l eq "c:\\windows\\system32\\pngfilt\.dll");
-
+						if ($l eq "c:\\windows\\system32\\pngfilt\.dll" || $l eq "c:\\windows\\syswow64\\pngfilt\.dll") {
+							::rptMsg("Possible Lurk infection found!");
+							::rptMsg("  ".$l);
+						}
 					}
-					
+				
 					eval {
 						my $n = $s->get_subkey("InprocServer32")->get_value("")->get_data();
 						alertCheckPath($n);
 					};
 
-# Poweliks
+# Powerliks
 # http://www.symantec.com/connect/blogs/trojanpoweliks-threat-inside-system-registry		
 # http://msdn.microsoft.com/en-us/library/windows/desktop/ms683844(v=vs.85).aspx			
 					eval {
 						my $local = $s->get_subkey("localserver32");
-						my $poweliks = $local->get_value("")->get_data();
-						::rptMsg($s->get_name()."\\LocalServer32 key found\.");
-						::rptMsg("  LastWrite: ".gmtime($local->get_timestamp()));
-						if ($poweliks =~ m/^rundll32/) {
-							::rptMsg("**Possible Poweliks found\.");
-							::rptMsg("  ".$poweliks);
+						my $powerliks = $local->get_value("")->get_data();
+#						::rptMsg($s->get_name()."\\LocalServer32 key found\.");
+#						::rptMsg("  LastWrite: ".gmtime($local->get_timestamp()));
+						if ($powerliks =~ m/^rundll32 javascript/) {
+							::rptMsg("**Possible PowerLiks found\.");
+							::rptMsg("  ".$powerliks);
 						}
 					};
 				

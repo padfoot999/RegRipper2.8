@@ -5,6 +5,7 @@
 #
 #
 # Change History:
+#    20141204 - updated to include Category value
 #    20120917 - updated to include NameType value
 #    20090812 - updated code to parse DateCreated and DateLastConnected
 #               values; modified output, as well
@@ -13,6 +14,7 @@
 # References
 #
 # copyright 2009 H. Carvey, keydet89@yahoo.com
+# copyright 2014 BL Schatz, bradley@schatzforensic.com.au
 #-----------------------------------------------------------
 package networklist;
 use strict;
@@ -22,7 +24,7 @@ my %config = (hive          => "Software",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20120917);
+              version       => 20141204);
 
 sub getConfig{return %config}
 
@@ -40,6 +42,9 @@ my %types = (0x47 => "wireless",
              0x06 => "wired",
              0x17 => "broadband (3g)");
 
+my %categories = (0x0 => "Public",
+				  0x1 => "Private",
+				  0x2 => "Domain");
 sub pluginmain {
 	my $class = shift;
 	my $hive = shift;
@@ -79,6 +84,15 @@ sub pluginmain {
 					}
 					else {
 						$nl{$name}{Type} = $nl{$name}{NameType};
+					}
+
+					$nl{$name}{CategoryID} = $s->get_value("Category")->get_data();
+					
+					if (exists $categories{$nl{$name}{CategoryID}}) {
+						$nl{$name}{Category} = $categories{$nl{$name}{CategoryID}};
+					}
+					else {
+						$nl{$name}{Category} = $nl{$name}{CategoryID};
 					}
 					
 				};
@@ -128,6 +142,7 @@ sub pluginmain {
 				::rptMsg("  DateCreated      : ".$nl{$n}{DateCreated});
 				::rptMsg("  DefaultGatewayMac: ".$nl{$n}{DefaultGatewayMac});
 				::rptMsg("  Type             : ".$nl{$n}{Type});
+				::rptMsg("  Category         : ".$nl{$n}{Category});
 				::rptMsg("");
 			}
 			

@@ -4,11 +4,13 @@
 #  
 #
 # Change history
+#    20150110 - updated with additional detection
 #    20150101 - Created
 # 
 # Ref:
 #    https://www.mysonicwall.com/sonicalert/searchresults.aspx?ev=article&id=761
 #    http://www.malwaretech.com/2014/12/phase-bot-fileless-rootkit.html
+#    http://www.kernelmode.info/forum/viewtopic.php?f=16&t=3669
 #
 #
 # copyright 2015 QAR, LLC
@@ -22,7 +24,7 @@ my %config = (hive          => "All",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 22,
-              version       => 20150101);
+              version       => 20150110);
 
 sub getConfig{return %config}
 sub getShortDescr {
@@ -57,8 +59,8 @@ sub traverse {
   	if ($type == 1 || $type == 2) {
   		my $data = $val->get_data();
 			$data = lc($data);
-			if ($data =~ m/^rundll32 javascript/) {
-				::rptMsg("**Possible PowerLiks found\.");
+			if ($data =~ m/^rundll32 javascript/ || $data =~ m/^mshta/) {
+				::rptMsg("**Possible fileless malware found\.");
 				my $path = $key->get_path();
 				my @p = split(/\\/,$path);
   			$path = join('\\',@p[1..(scalar(@p) - 1)]);

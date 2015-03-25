@@ -3,6 +3,7 @@
 # RR plugin to parse (Vista, Win7/Win2008R2) shell bags
 #
 # History:
+#   20150325 - updated parsing based on input from Eric Zimmerman
 #   20140728 - updated shell item 0x01 parsing
 #   20131216 - updated to support shell item type 0x52
 #   20130102 - updated to include type 0x35
@@ -31,7 +32,7 @@
 # assistance with some parsing.
 #
 # License: GPL v3 
-# copyright 2012 Quantum Analytics Research, LLC
+# copyright 2015 Quantum Analytics Research, LLC
 # Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package shellbags;
@@ -46,7 +47,7 @@ my %config = (hive          => "USRCLASS\.DAT",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20130102);
+              version       => 20150325);
 
 sub getConfig{return %config}
 
@@ -72,6 +73,7 @@ my %cp_guids = ("{bb64f8a7-bee7-4e1a-ab8d-7d8273f7fdb6}" => "Action Center",
     "{e2e7934b-dce5-43c4-9576-7fe4f75e7480}" => "Date and Time",
     "{00c6d95f-329c-409a-81d7-c46c66ea7f33}" => "Default Location",
     "{17cd9488-1228-4b2f-88ce-4298e93e0966}" => "Default Programs",
+    "{b4bfcc3a-db2c-424c-b029-7fe99a87c641}" => "Desktop",
     "{37efd44d-ef8d-41b1-940d-96973a50e9e0}" => "Desktop Gadgets",
     "{74246bfc-4c96-11d0-abef-0020af6b0b7a}" => "Device Manager",
     "{a8a91a66-3a7d-4424-8d24-04e180695c7a}" => "Devices and Printers",
@@ -136,18 +138,22 @@ my %folder_types = ("{724ef170-a42d-4fef-9f26-b60e846fba4f}" => "Administrative 
     "{1ac14e77-02e7-4e5d-b744-2eb1ae5198b7}" => "CSIDL_SYSTEM",
     "{b4bfcc3a-db2c-424c-b029-7fe99a87c641}" => "Desktop",
     "{7b0db17d-9cd2-4a93-9733-46cc89022e7c}" => "Documents Library",
+    "{a8cdff1c-4878-43be-b5fd-f8091c1c60d0}" => "Documents",
     "{fdd39ad0-238f-46af-adb4-6c85480369c7}" => "Documents",
     "{374de290-123f-4565-9164-39c4925e467b}" => "Downloads",
     "{de61d971-5ebc-4f02-a3a9-6c82895e5c04}" => "Get Programs",
     "{a305ce99-f527-492b-8b1a-7e76fa98d6e4}" => "Installed Updates",
     "{871c5380-42a0-1069-a2ea-08002b30309d}" => "Internet Explorer (Homepage)",
     "{031e4825-7b94-4dc3-b131-e946b44c8dd5}" => "Libraries",
+    "{2112ab0a-c86a-4ffe-a368-0de96e47012e}" => "Music",
+    "{1cf1260c-4dd0-4ebb-811f-33c572699fde}" => "Music",
     "{4bd8d571-6d19-48d3-be97-422220080e43}" => "Music",
     "{20d04fe0-3aea-1069-a2d8-08002b30309d}" => "My Computer",
     "{450d8fba-ad25-11d0-98a8-0800361b1103}" => "My Documents",
     "{ed228fdf-9ea8-4870-83b1-96b02cfe0d52}" => "My Games",
     "{208d2c60-3aea-1069-a2d7-08002b30309d}" => "My Network Places",
     "{f02c1a0d-be21-4350-88b0-7367fc96ef3c}" => "Network", 
+    "{3add1653-eb32-4cb0-bbd7-dfa0abb5acca}" => "Pictures",
     "{33e28130-4e1e-4676-835a-98395c3bc3bb}" => "Pictures",
     "{a990ae9f-a03b-4e80-94bc-9912d7504104}" => "Pictures",
     "{7c5a40ef-a0fb-4bfc-874a-c0f2e0b9fa8e}" => "Program Files (x86)",
@@ -164,6 +170,7 @@ my %folder_types = ("{724ef170-a42d-4fef-9f26-b60e846fba4f}" => "Administrative 
     "{9e52ab10-f80d-49df-acb8-4330f5687855}" => "Temporary Burn Folder",
     "{f3ce0f7c-4901-4acc-8648-d5d44b04ef8f}" => "Users Files",
     "{59031a47-3f72-44a7-89c5-5595fe6b30ee}" => "Users",
+    "{a0953c92-50dc-43bf-be83-3742fed03c9c}" => "Videos",
     "{b5947d7f-b489-4fde-9e77-23780cc610d1}" => "Virtual Machines",
     "{f38bf404-1d43-42f2-9305-67de0b28fc23}" => "Windows");
 
@@ -240,7 +247,7 @@ sub traverse {
  		}
  		elsif ($type == 0x2e) {
 # Device
-			%item = parseDeviceEntry($values{$v}); 		
+			%item = parseDeviceEntry($values{$v});		
  		}
  		elsif ($type == 0x2F) {
 # Volume (Drive Letter) 			
@@ -260,10 +267,10 @@ sub traverse {
  		elsif ($type == 0x31 || $type == 0x32 || $type == 0xb1 || $type == 0x74) {
 # Folder or Zip File			
  			%item = parseFolderEntry($values{$v}); 
+# 			probe($values{$v});
  		}
  		elsif ($type == 0x35) {
  			%item = parseFolderEntry2($values{$v});
- 			probe($values{$v});
  		}
  		elsif ($type == 0x71) {
 # Control Panel
@@ -393,29 +400,7 @@ sub parseVariableEntry {
 	  		$cnt += $sz;
 	  	}
 	  }
-	  
-#		if (exists $segs{"{5cbf2787-48cf-4208-b90e-ee5e5d420294}"}) {
-#			my $stuff = $segs{"{5cbf2787-48cf-4208-b90e-ee5e5d420294}"};
-#	  	my $tag = 1;
-#	  	my $cnt = 0x10;
-#	  	while($tag) {
-#	  		my $sz = unpack("V",substr($stuff,$cnt,4));
-#	  		my $id = unpack("V",substr($stuff,$cnt + 4,4));
-#	  		
-#	  		if ($sz == 0x00) {
-#	  			$tag = 0;
-#	  			next;
-#	  		}
-#	  		elsif ($id == 0x19) {
-#	  			
-#	  			my $num = unpack("V",substr($stuff,$cnt + 13,4));
-#	  			my $str = substr($stuff,$cnt + 13 + 4,($num * 2));
-#	  			$str =~ s/\00//g;
-#	  			$item{name} = $str;
-#	  		}
-#	  		$cnt += $sz;
-#	  	}
-#		}
+	 
 	}
 	elsif (substr($data,4,4) eq "AugM") {
 		%item = parseFolderEntry($data);
@@ -430,6 +415,20 @@ sub parseVariableEntry {
 		my ($sz1,$sz2,$sz3,$sz4) = unpack("VVVV",substr($data,0x26,16));
 		$item{name} = substr($data,0x36,$sz1 * 2);
 		$item{name} =~ s/\00//g;
+	}
+	elsif (unpack("v",substr($data,6,2)) == 0x05) {
+		my $o = 0x26;
+		my $t = 1;
+		while ($t) {
+			my $i = substr($data,$o,1);
+			if ($i =~ m/\00/) {
+				$t = 0;
+			}
+			else {
+				$item{name} .= $i;
+				$o++;
+			}
+		}	
 	}
 	else {
 		$item{name} = "Unknown Type";	
@@ -600,7 +599,18 @@ sub parseGUID {
   my $d3 = unpack("v",substr($data,6,2));
 	my $d4 = unpack("H*",substr($data,8,2));
   my $d5 = unpack("H*",substr($data,10,6));
-  return sprintf "{%08x-%x-%x-$d4-$d5}",$d1,$d2,$d3;
+  my $guid = sprintf "{%08x-%x-%x-$d4-$d5}",$d1,$d2,$d3;
+  
+  if (exists $cp_guids{$guid}) {
+  	return "CLSID_".$cp_guids{$guid};
+  }
+  elsif (exists $folder_types{$guid}) {
+  	return "CLSID_".$folder_types{$guid};
+  }
+  else {
+  	return $guid;
+  }
+ 
 }
 
 #-----------------------------------------------------------
@@ -609,17 +619,47 @@ sub parseGUID {
 sub parseDeviceEntry {
 	my $data = shift;
 	my %item = ();
+
+	my $ofs = unpack("v",substr($data,4,2));
+	my $tag = unpack("V",substr($data,6,4));
 	
-	my $userlen = unpack("V",substr($data,30,4));
-	my $devlen  = unpack("V",substr($data,34,4));
-	
-	my $user    = substr($data,0x28,$userlen * 2);
-	$user =~ s/\00//g;
-	
-	my $dev = substr($data,0x28 + ($userlen * 2),$devlen * 2);
-	$dev =~ s/\00//g;
-	
-	$item{name} = $user;
+	if ($tag == 0) {
+		my $guid1 = parseGUID(substr($data,$ofs + 6,16));
+		my $guid2 = parseGUID(substr($data,$ofs + 6 + 16,16));
+		$item{name} = $guid1."\\".$guid2
+	}
+	elsif ($tag == 2) {
+		$item{name} = substr($data,0x0a,($ofs + 6) - 0x0a);
+		$item{name} =~ s/\00//g;
+	}
+	else {
+    my $ver = unpack("C",substr($data,9,1));
+
+# Version 3 = XP    
+    if ($ver == 3) {
+    	my $guid1 = parseGUID(substr($data,$ofs + 6,16));
+			my $guid2 = parseGUID(substr($data,$ofs + 6 + 16,16));
+			$item{name} = $guid1."\\".$guid2
+    
+    }
+# Version 8 = Win7    
+    elsif ($ver == 8) {
+    	my $userlen = unpack("V",substr($data,30,4));
+			my $devlen  = unpack("V",substr($data,34,4));
+			my $user    = substr($data,0x28,$userlen * 2);
+			$user =~ s/\00//g;
+			my $dev = substr($data,0x28 + ($userlen * 2),$devlen * 2);
+			$dev =~ s/\00//g;
+			$item{name} = $user;	
+    }
+    elsif (unpack("C",substr($data,3,1)) == 0x80) {
+    	$item{name} = parseGUID(substr($data,4,16));
+    }
+# Version unknown    
+    else { 
+    	$item{name} = "Device Entry - Unknown Version";
+    } 
+	}
 	return %item;
 }
 
@@ -715,6 +755,7 @@ sub parseFolderEntry {
 		}
 	}
 	$item{extver} = unpack("v",substr($data,$ofs + $cnt - 4,2));
+#	printf "Version: 0x%x\n",$item{extver};
 	$ofs = $ofs + $cnt + 2;
 	
 	my @m = unpack("vv",substr($data,$ofs,4));
@@ -732,6 +773,9 @@ sub parseFolderEntry {
 	}
 	elsif ($item{extver} == 0x08) {
 		$jmp = 30;
+	}
+	elsif ($item{extver} == 0x09) {
+		$jmp = 34;
 	}
 	else {}
 	
@@ -820,6 +864,9 @@ sub parseFolderEntry2 {
 	my $jmp;
 	if ($item{extver} == 0x03) {
 		$jmp = 8;
+	}
+	elsif ($item{extver} == 0x04) {
+		$jmp = 34;
 	}
 	elsif ($item{extver} == 0x07) {
 		$jmp = 26;

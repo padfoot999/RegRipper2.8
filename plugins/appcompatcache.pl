@@ -2,6 +2,7 @@
 # appcompatcache.pl
 #
 # History:
+#  20150429 - updated to support Win10
 #  20140724 - update based on data provided by Shafik Punja
 #  20130801 - added initial Win8 support; very alpha at the moment
 #  20130603 - updated alerts
@@ -18,6 +19,7 @@
 #  Blog post: https://blog.mandiant.com/archives/2459
 #  Whitepaper: http://fred.mandiant.com/Whitepaper_ShimCacheParser.pdf
 #  Tool: https://github.com/mandiant/ShimCacheParser
+#  Win10: http://binaryforay.blogspot.com/2015/04/appcompatcache-changes-in-windows-10.html
 #
 # This plugin is based solely on the work and examples provided by Mandiant;
 # thanks to them for sharing this information, and making the plugin possible.
@@ -36,7 +38,7 @@ my %config = (hive          => "System",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 31,  #XP - Win7
-              version       => 20140724);
+              version       => 20150429);
 
 sub getConfig{return %config}
 sub getShortDescr {
@@ -102,11 +104,15 @@ sub pluginmain {
 			
 			}
 			elsif ($sig == 0x80) {
-				::rptMsg("Possible Win8 system\.");
-				::rptMsg(sprintf "Data Length: 0x%08x",length($app_data));
+#				::rptMsg("Possible Win8 system\.");
+#				::rptMsg(sprintf "Data Length: 0x%08x",length($app_data));
 				appWin8($app_data);
 #				probe($app_data);
 				
+			}
+			elsif ($sig == 0x30) {
+# Windows 10 system
+				appWin10($app_data);				
 			}
 			else {
 				::rptMsg(sprintf "Unknown signature: 0x%x",$sig);
@@ -320,7 +326,34 @@ sub appWin8 {
 		}			
 	
 	}
+}
 
+#-----------------------------------------------------------
+# appWin10()
+# Ref: http://binaryforay.blogspot.com/2015/04/appcompatcache-changes-in-windows-10.html
+#-----------------------------------------------------------
+sub appWin10 {
+	my $data = shift;
+	my $len = length($data);
+	my ($tag, $sz, $t0, $t1, $name, $name_len);
+	
+	my $ofs = 0x30;
+	
+	while ($ofs < $len) {
+		$tag = substr($data,$ofs,4);
+		if ($tag eq "10ts") {
+			
+			$sz = unpack("V",substr($data,$ofs + 0x08,4));
+			$name_len   = unpack("v",substr($data,$ofs + 0x0c,2));
+			my $name      = substr($data,$ofs + 0x0e,$name_len);
+			$name =~ s/\00//g;
+			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x03 + $name_len,8));
+			$files{$name}{modtime} = ::getTime($t0,$t1);
+			
+			$ofs += ($sz + 0x0c);
+		}
+		
+	}
 }
 
 #-----------------------------------------------------------
@@ -405,21 +438,6 @@ sub printData {
 		}
 		$display[$cnt] = sprintf("0x%08X  %-50s %s",$cnt,$lhs,$rhs);
 
-#		my @str1 = split(//,unpack("H*",$seg));
-#		my @s3;
-#		my $str = "";
-#		foreach my $i (0..($n - 1)) {
-#			$s3[$i] = $str1[$i * 2].$str1[($i * 2) + 1];
-#			
-#			if (hex($s3[$i]) > 0x1f && hex($s3[$i]) < 0x7f) {
-#				$str .= chr(hex($s3[$i]));
-#			}
-#			else {
-#				$str .= "\.";
-#			}
-#		}
-#		my $h = join(' ',@s3);
-#		$display[$cnt] = sprintf "0x%08x: %-47s  ".$str,($cnt * 16),$h;
 	}
 	return @display;
 }

@@ -2,6 +2,7 @@
 # appcompatcache_tln.pl
 #
 # History:
+#  20150529 - updated to include Win10 TP support
 #  20130509 - added additional alert/warn checks
 #  20130425 - added alertMsg() functionality
 #  20120817 - updated to address extra data in XP data blocks
@@ -34,7 +35,7 @@ my %config = (hive          => "System",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 31,  #XP - Win7
-              version       => 20130509);
+              version       => 20150429);
 
 sub getConfig{return %config}
 sub getShortDescr {
@@ -97,8 +98,19 @@ sub pluginmain {
 				};
 			
 			}
+			elsif ($sig == 0x80) {
+				eval {
+					appWin8($app_data);
+				};
+			}
+			elsif ($sig == 0x30) {
+# Windows 10 system
+				eval {
+					appWin10($app_data);		
+				};		
+			}
 			else {
-				::rptMsg("Unknown signature");
+				::rptMsg(sprintf "Unknown signature: 0x%x",$sig);
 			}
 # this is where we print out the files
 			foreach my $f (keys %files) {
@@ -114,8 +126,8 @@ sub pluginmain {
 				::rptMsg($files{$f}{modtime}."|REG|||".$str);
 
 # added 20130603				
-				alertCheckPathTLN($f,$files{$f}{modtime});
-				alertCheckADSTLN($f,$files{$f}{modtime});
+#				alertCheckPathTLN($f,$files{$f}{modtime});
+#				alertCheckADSTLN($f,$files{$f}{modtime});
 				::alertMsg($files{$f}{modtime}."|WARN|||Use of calcs\.exe. appcompatcache_tln: ".$f) if ($f =~ m/cacls\.exe$/);
 			}
 		}
@@ -271,6 +283,77 @@ sub appWin7 {
 			$files{$file}{modtime} = $t;
 			$files{$file}{executed} = 1 if ($f0 & 0x2);
 		}
+	}
+}
+
+#-----------------------------------------------------------
+# appWin8()
+#-----------------------------------------------------------
+sub appWin8 {
+	my $data = shift;
+	my $len = length($data);
+	my ($jmp, $t0, $t1, $sz, $name);
+	
+	my $ofs = unpack("V",substr($data,0,4));
+	
+	while($ofs < $len) {
+		my $tag = unpack("V",substr($data,$ofs,4));
+# 32-bit		
+		if ($tag == 0x73746f72) {
+			$jmp = unpack("V",substr($data,$ofs + 8,4));
+			($t0,$t1) = unpack("VV",substr($data,$ofs + 12,8));
+			$sz = unpack("v",substr($data,$ofs + 20,2));
+			$name = substr($data,$ofs + 22,$sz);
+			$name =~ s/\00//g;
+			
+			$files{$name}{modtime} = ::getTime($t0,$t1);
+			
+			$ofs += ($jmp + 12);
+		}
+# 64-bit
+		elsif ($tag == 0x73743030 || $tag == 0x73743031) {
+			$jmp = unpack("V",substr($data,$ofs + 8,4));
+			$sz = unpack("v",substr($data,$ofs + 0x0C,2));
+			$name = substr($data,$ofs + 0x0E,$sz + 2);
+			$name =~ s/\00//g;
+			
+			($t0,$t1) = unpack("VV",substr($data,($ofs + 0x0E + $sz +2 + 8),8));
+			$files{$name}{modtime} = ::getTime($t0,$t1);
+			
+			$ofs += ($jmp + 12);
+		}		
+		else {
+# Unknown tag
+		}			
+	
+	}
+}
+
+#-----------------------------------------------------------
+# appWin10()
+# Ref: http://binaryforay.blogspot.com/2015/04/appcompatcache-changes-in-windows-10.html
+#-----------------------------------------------------------
+sub appWin10 {
+	my $data = shift;
+	my $len = length($data);
+	my ($tag, $sz, $t0, $t1, $name, $name_len);
+	
+	my $ofs = 0x30;
+	
+	while ($ofs < $len) {
+		$tag = substr($data,$ofs,4);
+		if ($tag eq "10ts") {
+			
+			$sz = unpack("V",substr($data,$ofs + 0x08,4));
+			$name_len   = unpack("v",substr($data,$ofs + 0x0c,2));
+			my $name      = substr($data,$ofs + 0x0e,$name_len);
+			$name =~ s/\00//g;
+			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x03 + $name_len,8));
+			$files{$name}{modtime} = ::getTime($t0,$t1);
+			
+			$ofs += ($sz + 0x0c);
+		}
+		
 	}
 }
 

@@ -126,7 +126,7 @@ sub alertCheckPath {
 	$path =~ tr/[A-Z]/[a-z]/;
 	
 	my @alerts = ("recycle","globalroot","temp","system volume information","appdata",
-	              "application data","c:\\users");
+	              "application data","programdata","c:\\users");
 	
 	foreach my $a (@alerts) {
 		if (grep(/$a/,$path)) {

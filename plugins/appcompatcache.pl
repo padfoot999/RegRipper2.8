@@ -2,6 +2,7 @@
 # appcompatcache.pl
 #
 # History:
+#  20150611 - mod'd for Kevin Pagano
 #  20150429 - updated to support Win10
 #  20140724 - update based on data provided by Shafik Punja
 #  20130801 - added initial Win8 support; very alpha at the moment
@@ -24,7 +25,7 @@
 # This plugin is based solely on the work and examples provided by Mandiant;
 # thanks to them for sharing this information, and making the plugin possible.
 # 
-# copyright 2013 Quantum Analytics Research, LLC
+# copyright 2015 Quantum Analytics Research, LLC
 # Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package appcompatcache;
@@ -38,7 +39,7 @@ my %config = (hive          => "System",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 31,  #XP - Win7
-              version       => 20150429);
+              version       => 20150611);
 
 sub getConfig{return %config}
 sub getShortDescr {
@@ -51,6 +52,7 @@ sub getVersion {return $config{version};}
 
 my $VERSION = getVersion();
 my %files;
+my $str = "";
 
 sub pluginmain {
 	my $class = shift;
@@ -119,18 +121,23 @@ sub pluginmain {
 			}
 # this is where we print out the files
 			foreach my $f (keys %files) {
-				::rptMsg($f);
+#				::rptMsg($f);
 
 # Warnings and alerts, updated 20130603				
 #        alertCheckPath($f);
 #        alertCheckADS($f);
 #				::alertMsg("WARN: appcompatcache: use of cacls\.exe found: ".$f) if ($f =~ m/cacls\.exe$/);
 				
-				::rptMsg("ModTime: ".gmtime($files{$f}{modtime})." Z");
-				::rptMsg("UpdTime: ".gmtime($files{$f}{updtime})." Z") if (exists $files{$f}{updtime});
-				::rptMsg("Size   : ".$files{$f}{size}." bytes") if (exists $files{$f}{size});
-				::rptMsg("Executed") if (exists $files{$f}{executed});
-				::rptMsg("");
+				$str = $f."  ".gmtime($files{$f}{modtime})." Z";
+				$str .= "  ".gmtime($files{$f}{updtime})." Z" if (exists $files{$f}{updtime});
+				$str .= "  ".$files{$f}{size}." bytes" if (exists $files{$f}{size});
+				$str .= "  Executed" if (exists $files{$f}{executed});
+				::rptMsg($str);
+#				::rptMsg("ModTime: ".gmtime($files{$f}{modtime})." Z");
+#				::rptMsg("UpdTime: ".gmtime($files{$f}{updtime})." Z") if (exists $files{$f}{updtime});
+#				::rptMsg("Size   : ".$files{$f}{size}." bytes") if (exists $files{$f}{size});
+#				::rptMsg("Executed") if (exists $files{$f}{executed});
+#				::rptMsg("");
 			}
 	
 		}

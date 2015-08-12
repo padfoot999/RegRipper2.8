@@ -5,7 +5,7 @@
 #
 #
 # Change History:
-#    20141204 - updated to include Category value
+#    20150812 - updated to include Nla\Cache data
 #    20120917 - updated to include NameType value
 #    20090812 - updated code to parse DateCreated and DateLastConnected
 #               values; modified output, as well
@@ -13,8 +13,8 @@
 #
 # References
 #
-# copyright 2009 H. Carvey, keydet89@yahoo.com
-# copyright 2014 BL Schatz, bradley@schatzforensic.com.au
+# copyright 2015 Quantum Analytics Research, LLC
+# Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package networklist;
 use strict;
@@ -24,7 +24,7 @@ my %config = (hive          => "Software",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20141204);
+              version       => 20150812);
 
 sub getConfig{return %config}
 
@@ -42,9 +42,6 @@ my %types = (0x47 => "wireless",
              0x06 => "wired",
              0x17 => "broadband (3g)");
 
-my %categories = (0x0 => "Public",
-				  0x1 => "Private",
-				  0x2 => "Domain");
 sub pluginmain {
 	my $class = shift;
 	my $hive = shift;
@@ -84,15 +81,6 @@ sub pluginmain {
 					}
 					else {
 						$nl{$name}{Type} = $nl{$name}{NameType};
-					}
-
-					$nl{$name}{CategoryID} = $s->get_value("Category")->get_data();
-					
-					if (exists $categories{$nl{$name}{CategoryID}}) {
-						$nl{$name}{Category} = $categories{$nl{$name}{CategoryID}};
-					}
-					else {
-						$nl{$name}{Category} = $nl{$name}{CategoryID};
 					}
 					
 				};
@@ -137,12 +125,11 @@ sub pluginmain {
 			foreach my $n (keys %nl) {
 				my $str = sprintf "%-15s Gateway Mac: ".$nl{$n}{DefaultGatewayMac},$nl{$n}{ProfileName};
 				::rptMsg($nl{$n}{ProfileName});
-				::rptMsg("  Key LastWrite    : ".gmtime($nl{$n}{LastWrite})." UTC");
+				::rptMsg("  Key LastWrite    : ".gmtime($nl{$n}{LastWrite})." Z");
 				::rptMsg("  DateLastConnected: ".$nl{$n}{DateLastConnected});
 				::rptMsg("  DateCreated      : ".$nl{$n}{DateCreated});
 				::rptMsg("  DefaultGatewayMac: ".$nl{$n}{DefaultGatewayMac});
 				::rptMsg("  Type             : ".$nl{$n}{Type});
-				::rptMsg("  Category         : ".$nl{$n}{Category});
 				::rptMsg("");
 			}
 			
@@ -154,6 +141,18 @@ sub pluginmain {
 	else {
 		::rptMsg($key_path." not found.");
 	}
+  ::rptMsg("");
+# Get NLA info
+  $key_path = $base_path."\\Nla\\Cache\\Intranet";
+  if ($key = $root_key->get_subkey($key_path)) { 
+  	my @subkeys = $key->get_list_of_subkeys();
+  	if (scalar(@subkeys) > 0) {
+  		::rptMsg(sprintf "%-26s  %-30s","Date","Domain/IP");
+  		foreach my $s (@subkeys) {
+  			::rptMsg(sprintf "%-26s  %-30s",gmtime($s->get_timestamp())." Z",$s->get_name());
+  		}
+  	}
+  }
 }
 
 

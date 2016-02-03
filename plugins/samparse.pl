@@ -3,6 +3,7 @@
 # Parse the SAM hive file for user/group membership info
 #
 # Change history:
+#    20160203 - updated to include add'l values (randomaccess/Phill Moore contribution)
 #    20120722 - updated %config hash
 #    20110303 - Fixed parsing of SID, added check for account type
 #               Acct type determined based on Dustin Hulburt's "Forensic
@@ -17,7 +18,7 @@
 #    Source available here: http://pogostick.net/~pnh/ntpasswd/
 #    http://accessdata.com/downloads/media/Forensic_Determination_Users_Logon_Status.pdf
 #
-# copyright 2012 Quantum Analytics Research, LLC
+# copyright 2016 Quantum Analytics Research, LLC
 # Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package samparse;
@@ -31,7 +32,7 @@ my %config = (hive          => "SAM",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 1,
-              version       => 20120722);
+              version       => 20160203);
 
 sub getConfig{return %config}
 
@@ -117,6 +118,29 @@ sub pluginmain {
 					($f_val{pwd_reset_date} == 0) ? ($pwdreset = "Never") : ($pwdreset = gmtime($f_val{pwd_reset_date})." Z");
 					($f_val{pwd_fail_date} == 0) ? ($pwdfail = "Never") : ($pwdfail = gmtime($f_val{pwd_fail_date})." Z");
 					
+					my $given;
+					my $surname;
+					eval {
+						$given = $u->get_value("GivenName")->get_data();
+						$given =~ s/\00//g;
+					};
+					
+					eval {
+						$surname = $u->get_value("SurName")->get_data();
+						$surname =~ s/\00//g;
+					};
+					
+					::rptMsg("Name            : ".$given." ".$surname);
+					
+					my $internet;
+					eval {
+						$internet = $u->get_value("InternetUserName")->get_data();
+						$internet =~ s/\00//g;
+						::rptMsg("InternetName    : ".$internet);
+					};
+					
+					
+					
 					my $pw_hint;
 					eval {
 						$pw_hint = $u->get_value("UserPasswordHint")->get_data();
@@ -187,12 +211,10 @@ sub pluginmain {
 		}
 		else {
 			::rptMsg($key_path." has no subkeys.");
-			::logMsg($key_path." has no subkeys.");
 		}
 	}
 	else {
 		::rptMsg($key_path." not found.");
-		::logMsg($key_path." not found.");
 	}
 }
 

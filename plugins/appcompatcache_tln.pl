@@ -2,6 +2,7 @@
 # appcompatcache_tln.pl
 #
 # History:
+#  20160217 - updated to correctly support Win10
 #  20150529 - updated to include Win10 TP support
 #  20130509 - added additional alert/warn checks
 #  20130425 - added alertMsg() functionality
@@ -348,7 +349,7 @@ sub appWin10 {
 			$name_len   = unpack("v",substr($data,$ofs + 0x0c,2));
 			my $name      = substr($data,$ofs + 0x0e,$name_len);
 			$name =~ s/\00//g;
-			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x03 + $name_len,8));
+			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x0e + $name_len,8));
 			$files{$name}{modtime} = ::getTime($t0,$t1);
 			
 			$ofs += ($sz + 0x0c);

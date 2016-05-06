@@ -18,7 +18,7 @@ my %config = (hive          => "SYSTEM",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 22,
-              version       => 20120914);
+              version       => 20160506);
 			  
 my %starts = (0x00 => "Boot Start",
               0x01 => "System Start",

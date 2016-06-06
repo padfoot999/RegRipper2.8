@@ -2,6 +2,7 @@
 # appcompatcache.pl
 #
 # History:
+#  20160528 - updated code to not de-dup entries based on filename
 #  20160217 - updated to correctly support Win10
 #  20150611 - mod'd for Kevin Pagano
 #  20150429 - updated to support Win10
@@ -18,6 +19,7 @@
 #  20120418 - created
 #
 # References:
+#  https://binaryforay.blogspot.com/2016/05/appcompatcacheparser-v0900-released-and.html
 #  Blog post: https://blog.mandiant.com/archives/2459
 #  Whitepaper: http://fred.mandiant.com/Whitepaper_ShimCacheParser.pdf
 #  Tool: https://github.com/mandiant/ShimCacheParser
@@ -26,7 +28,7 @@
 # This plugin is based solely on the work and examples provided by Mandiant;
 # thanks to them for sharing this information, and making the plugin possible.
 # 
-# copyright 2015 Quantum Analytics Research, LLC
+# copyright 2016 Quantum Analytics Research, LLC
 # Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
 package appcompatcache;
@@ -40,11 +42,11 @@ my %config = (hive          => "System",
               hasDescr      => 0,
               hasRefs       => 0,
               osmask        => 31,  #XP - Win7
-              version       => 20150611);
+              version       => 20160528);
 
 sub getConfig{return %config}
 sub getShortDescr {
-	return "Parse files from System hive Shim Cache";	
+	return "Parse files from System hive AppCompatCache";	
 }
 sub getDescr{}
 sub getRefs {}
@@ -80,10 +82,14 @@ sub pluginmain {
 			
 			eval {
 				$app_data = $appcompat->get_subkey("AppCompatibility")->get_value("AppCompatCache")->get_data();
+				::rptMsg($appcompat_path."\\AppCompatibility");
+			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatibility")->get_timestamp())." Z");
 			};
 			
 			eval {
 				$app_data = $appcompat->get_subkey("AppCompatCache")->get_value("AppCompatCache")->get_data();
+				::rptMsg($appcompat_path."\\AppCompatCache");
+			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatCache")->get_timestamp())." Z");
 			};
 				
 #			::rptMsg("Length of data: ".length($app_data));
@@ -125,11 +131,6 @@ sub pluginmain {
 			foreach my $f (keys %files) {
 #				::rptMsg($f);
 
-# Warnings and alerts, updated 20130603				
-#        alertCheckPath($f);
-#        alertCheckADS($f);
-#				::alertMsg("WARN: appcompatcache: use of cacls\.exe found: ".$f) if ($f =~ m/cacls\.exe$/);
-				
 				my $modtime = $files{$f}{modtime};
 				if ($modtime == 0) {
 					$modtime = "";
@@ -138,18 +139,12 @@ sub pluginmain {
 					$modtime = gmtime($modtime)." Z";
 				}
 				
-				$str = $f."  ".$modtime;
+				$str = $files{$f}{filename}."  ".$modtime;
 				$str .= "  ".gmtime($files{$f}{updtime})." Z" if (exists $files{$f}{updtime});
 				$str .= "  ".$files{$f}{size}." bytes" if (exists $files{$f}{size});
 				$str .= "  Executed" if (exists $files{$f}{executed});
 				::rptMsg($str);
-#				::rptMsg("ModTime: ".gmtime($files{$f}{modtime})." Z");
-#				::rptMsg("UpdTime: ".gmtime($files{$f}{updtime})." Z") if (exists $files{$f}{updtime});
-#				::rptMsg("Size   : ".$files{$f}{size}." bytes") if (exists $files{$f}{size});
-#				::rptMsg("Executed") if (exists $files{$f}{executed});
-#				::rptMsg("");
 			}
-	
 		}
 		else {
 			::rptMsg($appcompat_path." not found.");
@@ -183,9 +178,10 @@ sub appXP32Bit {
 		my ($up1,$up2)   = unpack("VV",substr($x,544,8));
 		my $updtime      = ::getTime($up1,$up2);
 		
-		$files{$file}{size} = $sz;
-		$files{$file}{modtime} = $modtime;
-		$files{$file}{updtime} = $updtime;
+		$files{$i}{filename} = $file;
+		$files{$i}{size} = $sz;
+		$files{$i}{modtime} = $modtime;
+		$files{$i}{updtime} = $updtime;
 	}
 }
 #-----------------------------------------------------------
@@ -219,13 +215,10 @@ sub appWin2k3 {
 			$file =~ s/\00//g;
 			$file =~ s/^\\\?\?\\//;
 			my $t = ::getTime($t0,$t1);
-#			::rptMsg($file);
-#			::rptMsg("  LastMod: ".gmtime($t)." Z");
-#			::rptMsg("  [Executed]") if (($f0 < 4) && ($f0 & 0x2));
-#			::rptMsg("");
-			$files{$file}{modtime} = $t;
+			$files{$i}{filename} = $file;
+			$files{$i}{modtime} = $t;
 #			$files{$file}{size} = $f0 if (($f1 == 0) && ($f0 > 3));
-			$files{$file}{executed} = 1 if (($f0 < 4) && ($f0 & 0x2));
+			$files{$i}{executed} = 1 if (($f0 < 4) && ($f0 & 0x2));
 		}
 		elsif ($struct_sz == 32) {
 			my ($len,$max_len,$padding,$ofs0,$ofs1,$t0,$t1,$f0,$f1) = unpack("vvVVVVVVV",$struct);
@@ -233,18 +226,13 @@ sub appWin2k3 {
 			$file =~ s/\00//g;
 			$file =~ s/^\\\?\?\\//;
 			my $t = ::getTime($t0,$t1);
-#			::rptMsg($file);
-#			::rptMsg("  LastMod: ".gmtime($t)." Z");
-#			::rptMsg("  Size   : ".$f0) if (($f1 == 0) && ($f0 > 3));
-#			::rptMsg("  [Executed]") if (($f0 < 4) && ($f0 & 0x2));
-#			::rptMsg("");
-			$files{$file}{modtime} = $t;
-			$files{$file}{size} = $f0 if (($f1 == 0) && ($f0 > 3));
-			$files{$file}{executed} = 1 if (($f0 < 4) && ($f0 & 0x2));
+			$files{i}{filename} = $file;
+			$files{$i}{modtime} = $t;
+			$files{$i}{size} = $f0 if (($f1 == 0) && ($f0 > 3));
+			$files{$i}{executed} = 1 if (($f0 < 4) && ($f0 & 0x2));
 		}
 		else {
- 			
-			
+#
 		}
 	}
 }
@@ -279,12 +267,9 @@ sub appWin7 {
 			$file =~ s/\00//g;
 			$file =~ s/^\\\?\?\\//;
 			my $t = ::getTime($t0,$t1);
-#			::rptMsg($file);
-#			::rptMsg("  LastModTime: ".gmtime($t)." Z");
-#			::rptMsg("  [Executed]") if ($f0 & 0x2);
-#			::rptMsg("");		
-			$files{$file}{modtime} = $t;
-			$files{$file}{executed} = 1 if ($f0 & 0x2);
+ 			$files{$i}{filename} = $file;	
+			$files{$i}{modtime} = $t;
+			$files{$i}{executed} = 1 if ($f0 & 0x2);
 		}
 		else {
 			my ($len,$max_len,$padding,$ofs0,$ofs1,$t0,$t1,$f0,$f1) = unpack("vvV7x16",$struct);
@@ -292,12 +277,9 @@ sub appWin7 {
 			$file =~ s/\00//g;
 			$file =~ s/^\\\?\?\\//;
 			my $t = ::getTime($t0,$t1);
-#			::rptMsg($file);
-#			::rptMsg("  LastModTime: ".gmtime($t)." Z");
-#			::rptMsg("  [Executed]") if ($f0 & 0x2);
-#			::rptMsg("");		
-			$files{$file}{modtime} = $t;
-			$files{$file}{executed} = 1 if ($f0 & 0x2);
+ 			$files{$i}{filename} = $file;	
+			$files{$i}{modtime} = $t;
+			$files{$i}{executed} = 1 if ($f0 & 0x2);
 		}
 	}
 }
@@ -309,7 +291,7 @@ sub appWin8 {
 	my $data = shift;
 	my $len = length($data);
 	my ($jmp, $t0, $t1, $sz, $name);
-	
+	my $ct = 0;
 	my $ofs = unpack("V",substr($data,0,4));
 	
 	while($ofs < $len) {
@@ -321,9 +303,9 @@ sub appWin8 {
 			$sz = unpack("v",substr($data,$ofs + 20,2));
 			$name = substr($data,$ofs + 22,$sz);
 			$name =~ s/\00//g;
-			
-			$files{$name}{modtime} = ::getTime($t0,$t1);
-			
+			$files{$ct}{filename} = $name;
+			$files{$ct}{modtime} = ::getTime($t0,$t1);
+			$ct++;
 			$ofs += ($jmp + 12);
 		}
 # 64-bit
@@ -332,10 +314,10 @@ sub appWin8 {
 			$sz = unpack("v",substr($data,$ofs + 0x0C,2));
 			$name = substr($data,$ofs + 0x0E,$sz + 2);
 			$name =~ s/\00//g;
-			
 			($t0,$t1) = unpack("VV",substr($data,($ofs + 0x0E + $sz +2 + 8),8));
-			$files{$name}{modtime} = ::getTime($t0,$t1);
-			
+			$files{$ct}{filename} = $name;
+			$files{$ct}{modtime} = ::getTime($t0,$t1);
+			$ct++;
 			$ofs += ($jmp + 12);
 		}		
 		else {
@@ -353,7 +335,7 @@ sub appWin10 {
 	my $data = shift;
 	my $len = length($data);
 	my ($tag, $sz, $t0, $t1, $name, $name_len);
-	
+	my $ct = 0;
 	my $ofs = 0x30;
 	
 	while ($ofs < $len) {
@@ -366,11 +348,11 @@ sub appWin10 {
 			$name =~ s/\00//g;
 #			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x03 + $name_len,8));
 			($t0,$t1) = unpack("VV",substr($data,$ofs + 0x0e + $name_len,8));
-			$files{$name}{modtime} = ::getTime($t0,$t1);
-			
+			$files{$ct}{filename} = $name;
+			$files{$ct}{modtime} = ::getTime($t0,$t1);
+			$ct++;
 			$ofs += ($sz + 0x0c);
 		}
-		
 	}
 }
 

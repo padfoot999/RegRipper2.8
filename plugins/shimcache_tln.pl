@@ -1,12 +1,11 @@
 #-----------------------------------------------------------
-# shimcache.pl
+# shimcache_tln.pl
 # Variant of the appcompatcache.pl plugin, meant to parse data from
 # all available ControlSets; this is meant as a test to see how it 
 # works within an analysis process.
 #
 # History:
-#  20160528 - updated
-#  20160502 - created
+#  20160528 - created
 #
 # References:
 #  https://binaryforay.blogspot.com/2016/05/appcompatcacheparser-v0900-released-and.html
@@ -21,12 +20,12 @@
 # copyright 2016 Quantum Analytics Research, LLC
 # Author: H. Carvey, keydet89@yahoo.com
 #-----------------------------------------------------------
-package shimcache;
+package shimcache_tln;
 use strict;
 
 my %config = (hive          => "System",
 							hivemask      => 4,
-							output        => "report",
+							output        => "tln",
 							category      => "Program Execution",
               hasShortDescr => 1,
               hasDescr      => 0,
@@ -50,9 +49,9 @@ my $str = "";
 sub pluginmain {
 	my $class = shift;
 	my $hive = shift;
-	::logMsg("Launching shimcache v.".$VERSION);
-	::rptMsg("shimcache v.".$VERSION); 
-  ::rptMsg("(".$config{hive}.") ".getShortDescr()."\n");  
+	::logMsg("Launching shimcache_tln v.".$VERSION);
+#	::rptMsg("shimcache_tln v.".$VERSION); 
+#  ::rptMsg("(".$config{hive}.") ".getShortDescr()."\n");  
 	my $reg = Parse::Win32Registry->new($hive);
 	my $root_key = $reg->get_root_key;
 	my @sets = ();
@@ -67,7 +66,7 @@ sub pluginmain {
 	
 	my $set;
 	foreach $set (@sets) {
-		::rptMsg("*** ".$set." ***");
+#		::rptMsg("*** ".$set." ***");
 		my $appcompat_path = $set."\\Control\\Session Manager";
 		my $appcompat;
 		if ($appcompat = $root_key->get_subkey($appcompat_path)) {
@@ -78,18 +77,18 @@ sub pluginmain {
 			
 			eval {
 				$app_data = $appcompat->get_subkey("AppCompatibility")->get_value("AppCompatCache")->get_data();
-				::rptMsg($appcompat_path."\\AppCompatibility");
-			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatibility")->get_timestamp())." Z");
+#				::rptMsg($appcompat_path."\\AppCompatibility");
+#			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatibility")->get_timestamp())." Z");
 			};
 			
 			eval {
 				$app_data = $appcompat->get_subkey("AppCompatCache")->get_value("AppCompatCache")->get_data();
-				::rptMsg($appcompat_path."\\AppCompatCache");
-			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatCache")->get_timestamp())." Z");
+#				::rptMsg($appcompat_path."\\AppCompatCache");
+#			  ::rptMsg("LastWrite Time: ".gmtime($appcompat->get_subkey("AppCompatCache")->get_timestamp())." Z");
 			};
 			
 			my $sig = unpack("V",substr($app_data,0,4));
-			::rptMsg(sprintf "Signature: 0x%x",$sig);
+#			::rptMsg(sprintf "Signature: 0x%x",$sig);
 			
 			if ($sig == 0xdeadbeef) {
 				eval {
@@ -118,27 +117,22 @@ sub pluginmain {
 			}
 
 			foreach my $f (keys %files) {
-#				::rptMsg($f);
-
-				my $modtime = $files{$f}{modtime};
-				if ($modtime == 0) {
-					$modtime = "";
+				my $str;
+				if (exists $files{$f}{executed}) {
+					$str = "M... [Program Execution] AppCompatCache - ".$files{$f}{filename};
 				}
 				else {
-					$modtime = gmtime($modtime)." Z";
+					$str = "M... AppCompatCache - ".$files{$f}{filename};
 				}
-				
-				$str = $files{$f}{filename}."  ".$modtime;
-				$str .= "  ".gmtime($files{$f}{updtime})." Z" if (exists $files{$f}{updtime});
-				$str .= "  ".$files{$f}{size}." bytes" if (exists $files{$f}{size});
-				$str .= "  Executed" if (exists $files{$f}{executed});
-				::rptMsg($str);
+				$str .= " [Size = ".$files{$f}{size}." bytes]" if (exists $files{$f}{size});
+				$str .= " [Executed]" if (exists $files{$f}{executed}); 
+				::rptMsg($files{$f}{modtime}."|REG|||".$str);
 			}
 		}
 		else {
 			::rptMsg($appcompat_path." not found.");
 		}
-		::rptMsg("");
+#		::rptMsg("");
 	}
 }
 
@@ -148,7 +142,7 @@ sub pluginmain {
 #-----------------------------------------------------------
 sub appXP32Bit {
 	my $data = shift;
-	::rptMsg("WinXP, 32-bit");
+#	::rptMsg("WinXP, 32-bit");
 # header is 400 bytes; each structure is 552 bytes in size
 	my $num_entries = unpack("V",substr($data,4,4));
 	
@@ -184,11 +178,11 @@ sub appWin2k3 {
 # if $padding == 0, 64-bit; otherwise, 32-bit
 		if ($padding == 0) {
 			$struct_sz = 32;
-			::rptMsg("Win2K3/Vista/Win2K8, 64-bit");
+#			::rptMsg("Win2K3/Vista/Win2K8, 64-bit");
 		}
 		else {
 			$struct_sz = 24;
-			::rptMsg("Win2K3/Vista/Win2K8, 32-bit");
+#			::rptMsg("Win2K3/Vista/Win2K8, 32-bit");
 		}
 	}
 	
@@ -231,18 +225,18 @@ sub appWin7 {
 	my $data = shift;
 	my $struct_sz = 0;
 	my $num_entries = unpack("V",substr($data,4,4));
-	::rptMsg("Num_entries: ".$num_entries);
-	::rptMsg("Data Length: ".length($data)." bytes");
+#	::rptMsg("Num_entries: ".$num_entries);
+#	::rptMsg("Data Length: ".length($data)." bytes");
 # 128-byte header	
 	my ($len,$max_len,$padding) = unpack("vvV",substr($data,128,8));
 	if (($max_len - $len) == 2) {
 		if ($padding == 0) {
 			$struct_sz = 48;
-			::rptMsg("Win2K8R2/Win7, 64-bit");
+#			::rptMsg("Win2K8R2/Win7, 64-bit");
 		}
 		else {
 			$struct_sz = 32;
-			::rptMsg("Win2K8R2/Win7, 32-bit");
+#			::rptMsg("Win2K8R2/Win7, 32-bit");
 		}
 	}
 
@@ -342,33 +336,6 @@ sub appWin10 {
 		}
 	}
 }
-
-#-----------------------------------------------------------
-# alertCheckPath()
-#-----------------------------------------------------------
-sub alertCheckPath {
-	my $path = shift;
-	$path = lc($path);
-	my @alerts = ("recycle","globalroot","temp","system volume information","appdata",
-	              "application data");
-	
-	foreach my $a (@alerts) {
-		if (grep(/$a/,$path)) {
-			::alertMsg("ALERT: appcompatcache: ".$a." found in path: ".$path);              
-		}
-	}
-}
-
-#-----------------------------------------------------------
-# alertCheckADS()
-#-----------------------------------------------------------
-sub alertCheckADS {
-	my $path = shift;
-	my @list = split(/\\/,$path);
-	my $last = $list[scalar(@list) - 1];
-	::alertMsg("ALERT: appcompatcache: Poss. ADS found in path: ".$path) if grep(/:/,$last);
-}
-
 
 #-----------------------------------------------------------
 # probe()

@@ -50,7 +50,7 @@ my %config = (hive          => "NTUSER\.DAT",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Shell/BagMRU traversal in XP NTUSER\.DAT hives";	
+	return "Shell/BagMRU traversal in XP NTUSER.DAT hives";	
 }
 sub getDescr{}
 sub getRefs {}

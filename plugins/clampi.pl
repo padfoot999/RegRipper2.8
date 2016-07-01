@@ -26,7 +26,7 @@ my %config = (hive          => "NTUSER\.DAT",
 
 sub getConfig{return %config}
 sub getShortDescr {
-	return "TEST - Checks for keys set by Trojan\.Clampi PROT module";	
+	return "TEST - Checks for keys set by Trojan.Clampi PROT module";	
 }
 sub getDescr{}
 sub getRefs {}

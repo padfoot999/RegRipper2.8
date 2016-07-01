@@ -28,7 +28,7 @@ sub getConfig {return %config}
 sub getHive {return $config{hive};}
 sub getVersion {return $config{version};}
 sub getShortDescr {
-	return "Extracts values from Identities key; NTUSER\.DAT";
+	return "Extracts values from Identities key; NTUSER.DAT";
 }
 
 sub pluginmain {

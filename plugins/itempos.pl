@@ -43,7 +43,7 @@ my %config = (hive          => "NTUSER\.DAT",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Shell/Bags/1/Desktop ItemPos* value parsing; Win7 NTUSER\.DAT hives";	
+	return "Shell/Bags/1/Desktop ItemPos* value parsing; Win7 NTUSER.DAT hives";	
 }
 sub getDescr{}
 sub getRefs {}

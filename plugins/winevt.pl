@@ -25,7 +25,7 @@ my %config = (hive          => "Software",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Get the Windows event log policy from the Winevt'\'Channels key";	
+	return "Get the Windows event log policy from the Winevt\\Channels key";	
 }
 sub getDescr{}
 sub getRefs {}
@@ -45,7 +45,7 @@ sub pluginmain {
 	my $reg = Parse::Win32Registry->new($hive);
 	
 sub getShortDescr {
-	return "Get the Windows event log policy from the Winevt\Channels key";	
+	return "Get the Windows event log policy from the Winevt\\Channels key";	
 }
 	
 my $root_key = $reg->get_root_key;

@@ -30,7 +30,7 @@ sub getHive {return $config{hive};}
 sub getVersion {return $config{version};}
 sub getDescr {}
 sub getShortDescr {
-	return "Parse AmCache\.hve file";
+	return "Parse AmCache.hve file";
 }
 sub getRefs {}
 

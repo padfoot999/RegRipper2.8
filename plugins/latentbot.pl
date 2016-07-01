@@ -25,7 +25,7 @@ my %config = (hive          => "NTUSER\.DAT",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Check NTUSER\.DAT for indications of LatentBot";	
+	return "Check NTUSER.DAT for indications of LatentBot";	
 }
 sub getDescr{}
 sub getRefs {}

@@ -77,7 +77,7 @@ sub pluginmain {
 	}
 	
 # update added 20130327
-	my @paths = ("LANDesk\\Inventory\\LogonHistory\\Logons",
+	@paths = ("LANDesk\\Inventory\\LogonHistory\\Logons",
 	             "Wow6432Node\\LANDesk\\Inventory\\LogonHistory\\Logons");
 	
 	foreach my $key_path (@paths) {

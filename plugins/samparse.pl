@@ -167,7 +167,7 @@ sub pluginmain {
 	::rptMsg("Group Membership Information");
 	::rptMsg("-" x 25);
 # Get Group membership information	
-	my $key_path = 'SAM\\Domains\\Builtin\\Aliases';
+	$key_path = 'SAM\\Domains\\Builtin\\Aliases';
 	if ($key = $root_key->get_subkey($key_path)) {
 		my %grps;
 		my @groups = $key->get_list_of_subkeys();

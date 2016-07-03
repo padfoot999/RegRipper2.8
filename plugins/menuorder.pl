@@ -183,18 +183,18 @@ sub parseAugM {
 		$item{version} = unpack("v",substr($data2,2,2));
 		my $ext = unpack("v",substr($data2,4,2));
 	
-		my $ofs = 0x08;
+		$ofs = 0x08;
 # Get creation time values;
 #		my @m = unpack("vv",substr($data,$ofs,4));
 		$ofs += 4;
 # Get last access time values		
-#		my @m = unpack("vv",substr($data,$ofs,4));
+#		@m = unpack("vv",substr($data,$ofs,4));
 		$ofs += 4;
 		$ofs += 4;
 		
-		my $tag = 1;
-		my $cnt = 0;
-		my $str = "";
+		$tag = 1;
+		$cnt = 0;
+		$str = "";
 		while ($tag) {
 			my $s = substr($data2,$ofs + $cnt,2);
 			if (unpack("v",$s) == 0) {
@@ -258,7 +258,7 @@ sub parseItem {
 
 	my $ext = unpack("v",substr($data2,4,2));
 	
-	my $ofs = 0x08;
+	$ofs = 0x08;
 # Get creation time values;
 #		my @m = unpack("vv",substr($data,$ofs,4));
 	$ofs += 4;
@@ -280,9 +280,9 @@ sub parseItem {
 	
 	$ofs += $jmp;
 	
-	my $tag = 1;
-	my $cnt = 0;
-	my $str = "";
+	$tag = 1;
+	$cnt = 0;
+	$str = "";
 	while ($tag) {
 		my $s = substr($data2,$ofs + $cnt,2);
 		if (unpack("v",$s) == 0) {

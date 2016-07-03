@@ -56,8 +56,7 @@ sub pluginmain {
 	};
 	$comp_name = "Test" if ($@);
 	
-	my $key_path = $ccs."\\Enum\\USBStor";
-	my $key;
+	$key_path = $ccs."\\Enum\\USBStor";
 	if ($key = $root_key->get_subkey($key_path)) {
 
 		my @subkeys = $key->get_list_of_subkeys();

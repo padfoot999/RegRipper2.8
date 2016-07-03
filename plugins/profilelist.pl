@@ -95,7 +95,7 @@ sub pluginmain {
 	}
 	
 # The following was added 20100219
-	my $key_path = "Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
+	$key_path = "Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
 	if ($key = $root_key->get_subkey($key_path)) {
 		my @subkeys = $key->get_list_of_subkeys();
 		if (scalar @subkeys > 0) {

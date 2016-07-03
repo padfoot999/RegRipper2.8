@@ -193,7 +193,7 @@ sub pluginmain {
 		}
 	}
 	
-	my $key_path = "Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\InstalledSDB";
+	$key_path = "Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\InstalledSDB";
 	if ($key = $root_key->get_subkey($key_path)) {
 		my @subkeys = $key->get_list_of_subkeys($key);
 		if (scalar @subkeys > 0) {

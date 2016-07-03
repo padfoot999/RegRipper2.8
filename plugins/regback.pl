@@ -71,8 +71,8 @@ sub pluginmain {
 		::rptMsg($key_path." not found.");
 	}
 	
-	my $class = shift;
-	my $hive = shift;
+	$class = shift;
+	$hive = shift;
 	
 	my %tasks;
 	
@@ -80,9 +80,8 @@ sub getShortDescr {
 	return "List all tasks along with logfile name and last written date/time";	
 }
 	
-	my $root_key = $reg->get_root_key;
-	my $key_path = "Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks";
-	my $key;
+	$root_key = $reg->get_root_key;
+	$key_path = "Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks";
 	if ($key = $root_key->get_subkey($key_path)) {
 		::rptMsg($key_path);
 		::rptMsg("LastWrite Time ".gmtime($key->get_timestamp())." (UTC)");

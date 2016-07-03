@@ -90,7 +90,7 @@ sub pluginmain {
 			# Checks to see if TeamViewer is removed
 			eval {
 				
-				$root_key->get_subkey(@paths2[$array_count])->get_name();	# 1st evaluation
+				$root_key->get_subkey($paths2[$array_count])->get_name();	# 1st evaluation
 				$root_key->get_subkey($key_path)->get_value($installDir)->get_name(); # 2nd evaluation
 			};
 
@@ -98,7 +98,7 @@ sub pluginmain {
 				::rptMsg("");
 				::rptMsg("");
 				::rptMsg("[*] Identified TeamViewer has been removed from the system. Hence, the below key and value do not exist means TeamViewer is not on the system:");
-				::rptMsg(@paths2[$array_count]." key not found");
+				::rptMsg($paths2[$array_count]." key not found");
 				::rptMsg($installDir." value not found");
 			}
 

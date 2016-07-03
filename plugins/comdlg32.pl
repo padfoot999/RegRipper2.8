@@ -128,9 +128,9 @@ sub parseLastVisitedMRU {
 			@mrulist = split(//,$lvmru{MRUList});
 			delete($lvmru{MRUList});
 			foreach my $m (@mrulist) {
-				my ($file,$dir) = split(/\00\00/,$lvmru{$m},2);
-				$file =~ s/\00//g;
-				$dir  =~ s/\00//g;
+				my ($file,$dir) = split(/\x00\x00/,$lvmru{$m},2);
+				$file =~ s/\x00//g;
+				$dir  =~ s/\x00//g;
 				::rptMsg("  ".$m." -> EXE: ".$file);
 				::rptMsg("    -> Last Dir: ".$dir);
 			}
@@ -213,8 +213,8 @@ sub parseCIDSizeMRU {
 			delete $mru{0xffffffff};	
 			foreach my $m (sort {$a <=> $b} keys %mru) {
 #				my $file = parseStr($mru{$m});
-				my $file = (split(/\00\00/,$mru{$m},2))[0];
-				$file =~ s/\00//g;
+				my $file = (split(/\x00\x00/,$mru{$m},2))[0];
+				$file =~ s/\x00//g;
 				::rptMsg("  ".$file);
 			}
 		}
@@ -251,18 +251,18 @@ sub parseFirstFolder {
 			delete $mru{0xffffffff};	
 			foreach my $m (sort {$a <=> $b} keys %mru) {
 #				my $file = parseStr($mru{$m});
-				my @files = split(/\00\00/,$mru{$m});
+				my @files = split(/\x00\x00/,$mru{$m});
 				if (scalar(@files) == 0) {
 					::rptMsg("  No files listed.");
 				}
 				elsif (scalar(@files) == 1) {
-					$files[0] =~ s/\00//g;
+					$files[0] =~ s/\x00//g;
 					::rptMsg("  ".$files[0]);
 				}
 				elsif (scalar(@files) > 1) {
 					my @files2;
 					foreach my $file (@files) {
-						$file =~ s/\00//g;
+						$file =~ s/\x00//g;
 						push(@files2,$file);
 					}
 					::rptMsg("  ".join(' ',@files2));
@@ -305,9 +305,9 @@ sub parseLastVisitedPidlMRU {
 			delete $mru{0xffffffff};	
 
 			foreach my $m (sort {$a <=> $b} keys %mru) {
-				my ($file,$shell) = split(/\00\00/,$mru{$m},2);
-				$file =~ s/\00//g;
-				$shell =~ s/^\00//;
+				my ($file,$shell) = split(/\x00\x00/,$mru{$m},2);
+				$file =~ s/\x00//g;
+				$shell =~ s/^\x00//;
 				my $str = parseShellItem($shell);
 				::rptMsg("  ".$file." - ".$str);
 			}
@@ -497,7 +497,7 @@ sub parseNetworkEntry {
 	my %item = ();	
 	$item{type} = unpack("C",substr($data,2,1));
 	
-	my @n = split(/\00/,substr($data,4,length($data) - 4));
+	my @n = split(/\x00/,substr($data,4,length($data) - 4));
 	$item{name} = $n[0];
 	$item{name} =~ s/^\W//;
 	return %item;
@@ -537,14 +537,14 @@ sub parseFolderEntry {
 	($item{mtime_str},$item{mtime}) = convertDOSDate($m[0],$m[1]);
 	
 # Need to read in short name; nul-term ASCII
-#	$item{shortname} = (split(/\00/,substr($data,12,length($data) - 12),2))[0];
+#	$item{shortname} = (split(/\x00/,substr($data,12,length($data) - 12),2))[0];
 	$ofs_shortname = $ofs_mdate + 6;	
 	my $tag = 1;
 	my $cnt = 0;
 	my $str = "";
 	while($tag) {
 		my $s = substr($data,$ofs_shortname + $cnt,1);
-		if ($s =~ m/\00/ && ((($cnt + 1) % 2) == 0)) {
+		if ($s =~ m/\x00/ && ((($cnt + 1) % 2) == 0)) {
 			$tag = 0;
 		}
 		else {
@@ -552,7 +552,7 @@ sub parseFolderEntry {
 			$cnt++;
 		}
 	}
-#	$str =~ s/\00//g;
+#	$str =~ s/\x00//g;
 	my $shortname = $str;
 	my $ofs = $ofs_shortname + $cnt + 1;
 # Read progressively, 1 byte at a time, looking for 0xbeef	
@@ -597,8 +597,8 @@ sub parseFolderEntry {
 	
 	my $str = substr($data,$ofs,length($data) - $ofs);
 	
-	my $longname = (split(/\00\00/,$str,2))[0];
-	$longname =~ s/\00//g;
+	my $longname = (split(/\x00\x00/,$str,2))[0];
+	$longname =~ s/\x00//g;
 
 	if ($longname ne "") {
 		$item{name} = $longname;

@@ -167,7 +167,7 @@ sub parseAugM {
 		my $str = "";
 		while($tag) {
 			my $s = substr($data,0x16 + $cnt,1);
-			if ($s =~ m/\00/ && ((($cnt + 1) % 2) == 0)) {
+			if ($s =~ m/\x00/ && ((($cnt + 1) % 2) == 0)) {
 				$tag = 0;
 			}
 			else {
@@ -205,15 +205,15 @@ sub parseAugM {
 				$cnt += 2;
 			}
 		}
-		$str =~ s/\00//g;
+		$str =~ s/\x00//g;
 		$item{name} = $str;
 		$ofs += $cnt;
 #		::rptMsg(sprintf " - Ofs: 0x%x   Remaining Data: 0x%x",$ofs,$sz - $ofs);
 		
 		if (($sz - $ofs) > 0x10) {
 			my $str = substr($data2,$ofs,$sz - $ofs);
-			$str =~ s/^\00+//;
-			my $s = (split(/\00/,$str,2))[0];
+			$str =~ s/^\x00+//;
+			my $s = (split(/\x00/,$str,2))[0];
 			$item{name} .= " (".$s.")";
 		}
 		
@@ -241,7 +241,7 @@ sub parseItem {
 	my $str = "";
 	while($tag) {
 		my $s = substr($data,$ofs + $cnt,1);
-		if ($s =~ m/\00/ && ((($cnt + 1) % 2) == 0)) {
+		if ($s =~ m/\x00/ && ((($cnt + 1) % 2) == 0)) {
 			$tag = 0;
 		}
 		else {
@@ -293,7 +293,7 @@ sub parseItem {
 			$cnt += 2;
 		}
 	}
-	$str =~ s/\00//g;
+	$str =~ s/\x00//g;
 	$item{name} = $str;
 	$ofs += $cnt;
 	

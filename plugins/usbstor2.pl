@@ -119,7 +119,7 @@ sub checkMountedDevices {
 				next unless ($name =~ m/^\\DosDevices/);
 				my $data = $v->get_data();
 				if (length($data) > 12) {
-					$data =~ s/\00//g; 
+					$data =~ s/\x00//g; 
 					return $name if (grep(/$pip/,$data));
 				}
 			}

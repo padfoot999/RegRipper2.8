@@ -358,7 +358,7 @@ sub parseFolderItem {
 	my $str = "";
 	while($tag) {
 		my $s = substr($data,$ofs_shortname + $cnt,1);
-		if ($s =~ m/\00/ && ((($cnt + 1) % 2) == 0)) {
+		if ($s =~ m/\x00/ && ((($cnt + 1) % 2) == 0)) {
 			$tag = 0;
 		}
 		else {
@@ -366,7 +366,7 @@ sub parseFolderItem {
 			$cnt++;
 		}
 	}
-#	$str =~ s/\00//g;
+#	$str =~ s/\x00//g;
 	my $shortname = $str;
 	my $ofs = $ofs_shortname + $cnt + 1;
 # Read progressively, 1 byte at a time, looking for 0xbeef	
@@ -404,8 +404,8 @@ sub parseFolderItem {
 	$ofs += $jmp;
 	
 	my $str = substr($data,$ofs,length($data) - $ofs);
-	my $longname = (split(/\00\00/,$str,2))[0];
-	$longname =~ s/\00//g;
+	my $longname = (split(/\x00\x00/,$str,2))[0];
+	$longname =~ s/\x00//g;
 	
 	if ($longname ne "") {
 		$item{name} = $longname;

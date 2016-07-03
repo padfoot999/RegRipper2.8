@@ -122,12 +122,12 @@ sub pluginmain {
 					my $surname;
 					eval {
 						$given = $u->get_value("GivenName")->get_data();
-						$given =~ s/\00//g;
+						$given =~ s/\x00//g;
 					};
 					
 					eval {
 						$surname = $u->get_value("SurName")->get_data();
-						$surname =~ s/\00//g;
+						$surname =~ s/\x00//g;
 					};
 					
 					::rptMsg("Name            : ".$given." ".$surname);
@@ -135,7 +135,7 @@ sub pluginmain {
 					my $internet;
 					eval {
 						$internet = $u->get_value("InternetUserName")->get_data();
-						$internet =~ s/\00//g;
+						$internet =~ s/\x00//g;
 						::rptMsg("InternetName    : ".$internet);
 					};
 					
@@ -144,7 +144,7 @@ sub pluginmain {
 					my $pw_hint;
 					eval {
 						$pw_hint = $u->get_value("UserPasswordHint")->get_data();
-						$pw_hint =~ s/\00//g;
+						$pw_hint =~ s/\x00//g;
 					};
 					::rptMsg("Password Hint   : ".$pw_hint) unless ($@);
 					::rptMsg("Last Login Date : ".$lastlogin);
@@ -345,7 +345,7 @@ sub _translateSID {
 #---------------------------------------------------------------------
 sub _uniToAscii {
   my $str = $_[0];
-  $str =~ s/\00//g;
+  $str =~ s/\x00//g;
   return $str;
 }
 

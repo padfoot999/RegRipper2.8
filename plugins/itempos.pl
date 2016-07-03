@@ -98,8 +98,7 @@ sub pluginmain {
 	}
 #	::rptMsg("");
 # The following was added on 20130514 to address Windows XP systems	
-	my $key_path = "Software\\Microsoft\\Windows\\ShellNoRoam\\Bags";
-	my $key;
+	$key_path = "Software\\Microsoft\\Windows\\ShellNoRoam\\Bags";
 	if ($key = $root_key->get_subkey($key_path)) {
 		my @sk = $key->get_list_of_subkeys();
 		if (scalar(@sk) > 0) {
@@ -241,8 +240,8 @@ sub parseFolderItem {
 	my $shortname = $str;
 	my $ofs = $ofs_shortname + $cnt + 1;
 # Read progressively, 1 byte at a time, looking for 0xbeef	
-	my $tag = 1;
-	my $cnt = 0;
+	$tag = 1;
+	$cnt = 0;
 	while ($tag) {
 		if (unpack("v",substr($data,$ofs + $cnt,2)) == 0xbeef) {
 			$tag = 0;
@@ -254,10 +253,10 @@ sub parseFolderItem {
 	$item{extver} = unpack("v",substr($data,$ofs + $cnt - 4,2));
 	$ofs = $ofs + $cnt + 2;
 	
-	my @m = unpack("vv",substr($data,$ofs,4));
+	@m = unpack("vv",substr($data,$ofs,4));
 	($item{ctime_str},$item{ctime}) = convertDOSDate($m[0],$m[1]);
 	$ofs += 4;
-	my @m = unpack("vv",substr($data,$ofs,4));
+	@m = unpack("vv",substr($data,$ofs,4));
 	($item{atime_str},$item{atime}) = convertDOSDate($m[0],$m[1]);
 	
 	my $jmp;
@@ -274,7 +273,7 @@ sub parseFolderItem {
 	
 	$ofs += $jmp;
 	
-	my $str = substr($data,$ofs,length($data) - 30);
+	$str = substr($data,$ofs,length($data) - 30);
 	my $longname = (split(/\x00\x00/,$str,2))[0];
 	$longname =~ s/\x00//g;
 	

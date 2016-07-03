@@ -55,8 +55,7 @@ sub pluginmain {
 
 	::rptMsg("");
 
-	my $key_path = "Classes\\HTTP\\shell\\open\\command";
-	my $key;
+	$key_path = "Classes\\HTTP\\shell\\open\\command";
 	if ($key = $root_key->get_subkey($key_path)) {
 		::rptMsg("Default Browser Check #2");
 		::rptMsg($key_path);

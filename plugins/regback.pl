@@ -30,8 +30,9 @@ my %config = (hive          => "Software",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Get logfile name of registry backup tasks";	
+	return "List all backup tasks along with logfile name and last written date/time";
 }
+
 sub getDescr{}
 sub getRefs {}
 sub getHive {return $config{hive};}
@@ -42,8 +43,8 @@ my $VERSION = getVersion();
 sub pluginmain {
 
 	::logMsg("Launching regback v.".$VERSION);
-  ::rptMsg("regback v.".$VERSION); # 20110830 [fpi] + banner
-  ::rptMsg("(".getHive().") ".getShortDescr()."\n"); # 20110830 [fpi] + banner
+	::rptMsg("regback v.".$VERSION); # 20110830 [fpi] + banner
+	::rptMsg("(".getHive().") ".getShortDescr()."\n"); # 20110830 [fpi] + banner
 
 	my $class = shift;
 	my $hive = shift;
@@ -75,10 +76,6 @@ sub pluginmain {
 	$hive = shift;
 	
 	my %tasks;
-	
-sub getShortDescr {
-	return "List all tasks along with logfile name and last written date/time";	
-}
 	
 	$root_key = $reg->get_root_key;
 	$key_path = "Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tasks";

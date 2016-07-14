@@ -122,7 +122,7 @@ sub parseData {
 		my @vals = unpack("v4V2",	substr($pd,$cursor,0x10));	
 		my $value = substr($pd,$cursor,$vals[0]);
 		my $name = substr($value,0x10,$vals[1]);
-		$name =~ s/\00//g;
+		$name =~ s/\x00//g;
 		
 		my $data = substr($value,0x10 + $vals[1],$vals[3]);
 		if ($vals[2] == 4) {
@@ -130,7 +130,7 @@ sub parseData {
 			$data = unpack("V",$data);
 		}
 		elsif ($vals[2] == 1) {
-			$data =~ s/\00//g;
+			$data =~ s/\x00//g;
 		}
 		elsif ($vals[2] == 3) {
 			$data = unpack("H*",$data);

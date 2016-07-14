@@ -52,7 +52,7 @@ my %config = (hive          => "USRCLASS\.DAT",
 sub getConfig{return %config}
 
 sub getShortDescr {
-	return "Shell/BagMRU traversal in Win7 USRCLASS\.DAT hives";	
+	return "Shell/BagMRU traversal in Win7 USRCLASS.DAT hives";	
 }
 sub getDescr{}
 sub getRefs {}
@@ -394,7 +394,7 @@ sub parseVariableEntry {
 	  			
 	  			my $num = unpack("V",substr($stuff,$cnt + 13,4));
 	  			my $str = substr($stuff,$cnt + 13 + 4,($num * 2));
-	  			$str =~ s/\00//g;
+	  			$str =~ s/\x00//g;
 	  			$item{name} = $str;
 	  		}
 	  		$cnt += $sz;
@@ -409,19 +409,19 @@ sub parseVariableEntry {
 	elsif ($tag == 0x7b || $tag == 0xbb || $tag == 0xfb) {
 		my ($sz1,$sz2,$sz3) = unpack("VVV",substr($data,0x3e,12));
 		$item{name} = substr($data,0x4a,$sz1 * 2);
-		$item{name} =~ s/\00//g;
+		$item{name} =~ s/\x00//g;
 	}
 	elsif ($tag == 0x02 || $tag == 0x03) {
 		my ($sz1,$sz2,$sz3,$sz4) = unpack("VVVV",substr($data,0x26,16));
 		$item{name} = substr($data,0x36,$sz1 * 2);
-		$item{name} =~ s/\00//g;
+		$item{name} =~ s/\x00//g;
 	}
 	elsif (unpack("v",substr($data,6,2)) == 0x05) {
 		my $o = 0x26;
 		my $t = 1;
 		while ($t) {
 			my $i = substr($data,$o,1);
-			if ($i =~ m/\00/) {
+			if ($i =~ m/\x00/) {
 				$t = 0;
 			}
 			else {
@@ -445,7 +445,7 @@ sub parseNetworkEntry {
 	my %item = ();	
 	$item{type} = unpack("C",substr($data,2,1));
 	
-	my @n = split(/\00/,substr($data,4,length($data) - 4));
+	my @n = split(/\x00/,substr($data,4,length($data) - 4));
 	$item{name} = $n[0];
 	return %item;
 }
@@ -462,13 +462,13 @@ sub parseZipSubFolderItem {
 
 # Get the opened/accessed date/time	
 	$item{datetime} = substr($data,0x24,6);
-	$item{datetime} =~ s/\00//g;
+	$item{datetime} =~ s/\x00//g;
 	if ($item{datetime} eq "N/A") {
 		
 	}
 	else {
 		$item{datetime} = substr($data,0x24,40);
-		$item{datetime} =~ s/\00//g;
+		$item{datetime} =~ s/\x00//g;
 		my ($date,$time) = split(/\s+/,$item{datetime},2);
 		my ($mon,$day,$yr) = split(/\//,$date,3);
 		my ($hr,$min,$sec) = split(/:/,$time,3);
@@ -481,9 +481,9 @@ sub parseZipSubFolderItem {
 	my $sz2 = unpack("V",substr($data,0x58,4));
 		
 	my $str1 = substr($data,0x5C,$sz *2) if ($sz > 0);
-	$str1 =~ s/\00//g;
+	$str1 =~ s/\x00//g;
 	my $str2 = substr($data,0x5C + ($sz * 2),$sz2 *2) if ($sz2 > 0);
-	$str2 =~ s/\00//g;
+	$str2 =~ s/\x00//g;
 		
 	if ($sz2 > 0) {
 		$item{name} = $str1."\\".$str2;
@@ -546,10 +546,10 @@ sub parseURIEntry {
 	
 	my $sz = unpack("V",substr($data,0x2a,4));
 	my $uri = substr($data,0x2e,$sz);
-	$uri =~ s/\00//g;
+	$uri =~ s/\x00//g;
 	
 	my $proto = substr($data,length($data) - 6, 6);
-	$proto =~ s/\00//g;
+	$proto =~ s/\x00//g;
 	
 	$item{name} = $proto."://".$uri." [".gmtime($item{uritime})."]";
 	
@@ -630,7 +630,7 @@ sub parseDeviceEntry {
 	}
 	elsif ($tag == 2) {
 		$item{name} = substr($data,0x0a,($ofs + 6) - 0x0a);
-		$item{name} =~ s/\00//g;
+		$item{name} =~ s/\x00//g;
 	}
 	else {
     my $ver = unpack("C",substr($data,9,1));
@@ -647,9 +647,9 @@ sub parseDeviceEntry {
     	my $userlen = unpack("V",substr($data,30,4));
 			my $devlen  = unpack("V",substr($data,34,4));
 			my $user    = substr($data,0x28,$userlen * 2);
-			$user =~ s/\00//g;
+			$user =~ s/\x00//g;
 			my $dev = substr($data,0x28 + ($userlen * 2),$devlen * 2);
-			$dev =~ s/\00//g;
+			$dev =~ s/\x00//g;
 			$item{name} = $user;	
     }
     elsif (unpack("C",substr($data,3,1)) == 0x80) {
@@ -725,14 +725,14 @@ sub parseFolderEntry {
 	($item{mtime_str},$item{mtime}) = convertDOSDate($m[0],$m[1]);
 	
 # Need to read in short name; nul-term ASCII
-#	$item{shortname} = (split(/\00/,substr($data,12,length($data) - 12),2))[0];
+#	$item{shortname} = (split(/\x00/,substr($data,12,length($data) - 12),2))[0];
 	$ofs_shortname = $ofs_mdate + 6;	
 	my $tag = 1;
 	my $cnt = 0;
 	my $str = "";
 	while($tag) {
 		my $s = substr($data,$ofs_shortname + $cnt,1);
-		if ($s =~ m/\00/ && ((($cnt + 1) % 2) == 0)) {
+		if ($s =~ m/\x00/ && ((($cnt + 1) % 2) == 0)) {
 			$tag = 0;
 		}
 		else {
@@ -740,12 +740,12 @@ sub parseFolderEntry {
 			$cnt++;
 		}
 	}
-#	$str =~ s/\00//g;
+#	$str =~ s/\x00//g;
 	my $shortname = $str;
 	my $ofs = $ofs_shortname + $cnt + 1;
 # Read progressively, 1 byte at a time, looking for 0xbeef	
-	my $tag = 1;
-	my $cnt = 0;
+	$tag = 1;
+	$cnt = 0;
 	while ($tag) {
 		if (unpack("v",substr($data,$ofs + $cnt,2)) == 0xbeef) {
 			$tag = 0;
@@ -758,10 +758,10 @@ sub parseFolderEntry {
 #	printf "Version: 0x%x\n",$item{extver};
 	$ofs = $ofs + $cnt + 2;
 	
-	my @m = unpack("vv",substr($data,$ofs,4));
+	@m = unpack("vv",substr($data,$ofs,4));
 	($item{ctime_str},$item{ctime}) = convertDOSDate($m[0],$m[1]);
 	$ofs += 4;
-	my @m = unpack("vv",substr($data,$ofs,4));
+	@m = unpack("vv",substr($data,$ofs,4));
 	($item{atime_str},$item{atime}) = convertDOSDate($m[0],$m[1]);
 	
 	my $jmp;
@@ -791,9 +791,9 @@ sub parseFolderEntry {
 	
 	$ofs += $jmp;
 	
-	my $str = substr($data,$ofs,length($data) - 30);
-	my $longname = (split(/\00\00/,$str,2))[0];
-	$longname =~ s/\00//g;
+	$str = substr($data,$ofs,length($data) - 30);
+	my $longname = (split(/\x00\x00/,$str,2))[0];
+	$longname =~ s/\x00//g;
 	
 	if ($longname ne "") {
 		$item{name} = $longname;
@@ -887,9 +887,9 @@ sub parseFolderEntry2 {
 #	}
 #	::rptMsg("");
 	
-	$item{name} = (split(/\00\00/,$str,2))[0];
-	$item{name} =~ s/\13\20/\2D\00/;
-	$item{name} =~ s/\00//g;
+	$item{name} = (split(/\x00\x00/,$str,2))[0];
+	$item{name} =~ s/\x13\x20/\x2D\x00/;
+	$item{name} =~ s/\x00//g;
 	
 	return %item;
 }
@@ -900,7 +900,7 @@ sub parseNetworkEntry {
 	my $data     = shift;
 	my %item = ();
 	$item{type} = unpack("C",substr($data,2,1));
-	my @names = split(/\00/,substr($data,5,length($data) - 5));
+	my @names = split(/\x00/,substr($data,5,length($data) - 5));
 	$item{name} = $names[0];
 	return %item;
 }
@@ -912,9 +912,9 @@ sub parseDatePathItem {
 	my $data = shift;
 	my %item = ();
 	$item{datestr} = substr($data,0x18,30);
-	my ($file,$dir) = split(/\00\00/,substr($data,0x44,length($data) - 0x44));
-	$file =~ s/\00//g;
-	$dir =~ s/\00//g;
+	my ($file,$dir) = split(/\x00\x00/,substr($data,0x44,length($data) - 0x44));
+	$file =~ s/\x00//g;
+	$dir =~ s/\x00//g;
 	$item{name} = $dir.$file;
 	return %item;	
 }
@@ -959,7 +959,7 @@ sub shellItem0x52 {
 			$cnt += 2;
 		}
 	}	
-	$item{name} =~ s/\00//g;
+	$item{name} =~ s/\x00//g;
 	
 	if ($item{subtype} < 3) {
 		$ofs = 0x32 + $cnt + 2;
@@ -969,7 +969,7 @@ sub shellItem0x52 {
 	}
 	$sz = unpack("V",substr($data,$ofs,4));
 	$item{str} = substr($data,$ofs + 4,$sz * 2);
-	$item{str} =~ s/\00//g;
+	$item{str} =~ s/\x00//g;
 	return %item;
 }
 

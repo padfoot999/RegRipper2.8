@@ -76,7 +76,7 @@ sub pluginmain {
 # Now that we have the most recent version of Office installed, let's 
 # start looking at the various subkeys
 	my @apps = ("Word","PowerPoint","Excel","Access");	
-	my $key_path = "Software\\Microsoft\\Office\\".$office_version;
+	$key_path = "Software\\Microsoft\\Office\\".$office_version;
 	
 	foreach my $app (@apps) {
 		::rptMsg("**".$app."**");

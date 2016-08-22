@@ -2,6 +2,7 @@
 # amcache.pl 
 #   
 # Change history
+#   20160818 - added check for value 17
 #   20131218 - fixed bug computing compile time
 #   20131213 - updated 
 #   20131204 - created
@@ -21,7 +22,7 @@ my %config = (hive          => "amcache",
               hasRefs       => 1,
               osmask        => 22,
               category      => "program execution",
-              version       => 20131218);
+              version       => 20160818);
 my $VERSION = getVersion();
 
 # Functions #
@@ -62,8 +63,9 @@ sub pluginmain {
 			if (scalar(@sk) > 0) {
 				foreach my $s (@sk) {
 					::rptMsg("File Reference: ".$s->get_name());
+					::rptMsg("LastWrite     : ".gmtime($s->get_timestamp())." Z");
 # update 20131213: based on trial and error, it appears that not all file
-# references will have all of the values, such as Path, or SHA-1					
+# references will have all of the values, such as Path, or SHA-1		
 					eval {
 						::rptMsg("Path          : ".$s->get_value("15")->get_data());
 					};
@@ -79,21 +81,26 @@ sub pluginmain {
 					eval {
 						@t = unpack("VV",$s->get_value("11")->get_data());
 						$gt = gmtime(::getTime($t[0],$t[1]));
-						::rptMsg("Last Mod Time : ".$gt);
+						::rptMsg("Last Mod Time : ".$gt." Z");
+					};
+					
+					eval {
+						@t = unpack("VV",$s->get_value("17")->get_data());
+						$gt = gmtime(::getTime($t[0],$t[1]));
+						::rptMsg("Last Mod Time2: ".$gt." Z");
 					};
 					
 					eval {
 						@t = unpack("VV",$s->get_value("12")->get_data());
 						$gt = gmtime(::getTime($t[0],$t[1]));
-						::rptMsg("Create Time   : ".$gt);
+						::rptMsg("Create Time   : ".$gt." Z");
 					};
 					
 					eval {
 						$gt = gmtime($s->get_value("f")->get_data());
 #						$gt = gmtime(unpack("V",$s->get_value("f")->get_data()));
-						::rptMsg("Compile Time  : ".$gt);
+						::rptMsg("Compile Time  : ".$gt." Z");
 					};
-					
 					::rptMsg("");
 				}
 			}

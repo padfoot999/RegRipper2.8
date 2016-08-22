@@ -4,6 +4,7 @@
 #
 #
 # Change history
+#   20160822 - updated based on client engagement
 #   20130326 - added Wow6432Node path
 #   20130214 - updated w/ Logon info
 #   20090729 - updates, H. Carvey
@@ -19,7 +20,7 @@ my %config = (hive          => "Software",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20130326);
+              version       => 20160822);
 
 sub getConfig{return %config}
 
@@ -32,7 +33,7 @@ sub getHive {return $config{hive};}
 sub getVersion {return $config{version};}
 
 my $VERSION = getVersion();
-my %ls;
+my (@ts,$d);
 
 sub pluginmain {
 	my $class = shift;
@@ -53,18 +54,28 @@ sub pluginmain {
 			my @subkeys = $key->get_list_of_subkeys();
 			if (scalar(@subkeys) > 0) {
 				foreach my $s (@subkeys) {
+				  ::rptMsg($s->get_name());
+					::rptMsg("  LastWrite: ".gmtime($s->get_timestamp())." Z");
+					
 					eval {
-						my $lw = $s->get_timestamp();
-# Push the data into a hash of arrays 
-						push(@{$ls{$lw}},$s->get_name());
+						@ts = unpack("VV",$s->get_value("Last Started")->get_data());
+						::rptMsg("  Last Started: ".gmtime(::getTime($ts[0],$ts[1]))." Z");
 					};
-				}
-			
-				foreach my $t (reverse sort {$a <=> $b} keys %ls) {
-					::rptMsg(gmtime($t)." (UTC)");
-					foreach my $item (@{$ls{$t}}) {
-						::rptMsg("  $item");
-					}
+					
+					eval {
+						@ts = unpack("VV",$s->get_value("First Started")->get_data());
+						::rptMsg("  First Started: ".gmtime(::getTime($ts[0],$ts[1]))." Z");
+					};
+					
+					eval {
+						::rptMsg("  Total Runs: ".$s->get_value("Total Runs")->get_data());
+					};
+					
+					eval {
+						::rptMsg("  Current User: ".$s->get_value("Current User")->get_data());
+					};
+					
+					::rptMsg("");
 				}
 			}
 			else {
@@ -76,6 +87,7 @@ sub pluginmain {
 		}
 	}
 	
+	::rptMsg("");
 # update added 20130327
 	@paths = ("LANDesk\\Inventory\\LogonHistory\\Logons",
 	             "Wow6432Node\\LANDesk\\Inventory\\LogonHistory\\Logons");

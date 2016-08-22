@@ -4,6 +4,7 @@
 #
 #
 # Change history
+#   20160822 - minor updates based on client engagement
 #   20130214 - updated with Logon info
 #   20090729 - updates, H. Carvey
 #
@@ -62,17 +63,18 @@ sub pluginmain {
 					$user = "" if ($@);
 				
 #				::rptMsg($lw."|REG||".$user."|M... LanDesk - ".$name." key last modified");
-				
+# "Current User" value not included in "First Started" data, as the user value applies only to the
+# "Last Started" value				
 					eval {
 						my @f = unpack("VV",$s->get_value("First Started")->get_data());
 						my $first = ::getTime($f[0],$f[1]);
-						::rptMsg($first."|REG||".$user."|LanDesk - ".$name." First Started");
+						::rptMsg($first."|REG|||LanDesk - ".$name." First Started");
 					};
 				
 					eval {
 						my @f = unpack("VV",$s->get_value("Last Started")->get_data());
 						my $first = ::getTime($f[0],$f[1]);
-						::rptMsg($first."|REG||".$user."|LanDesk - ".$name." Last Started");
+						::rptMsg($first."|REG||".$user."|LanDesk - ".$name." Last Started, Total Runs: ".$s->get_value("Total Runs")->get_data());
 					};
 				}
 			}

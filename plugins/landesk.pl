@@ -6,6 +6,7 @@
 #  https://community.landesk.com/docs/DOC-3249
 #
 # Change history
+#   20160823 - added "Current Duration" parsing
 #   20160822 - updated based on client engagement
 #   20130326 - added Wow6432Node path
 #   20130214 - updated w/ Logon info
@@ -22,7 +23,7 @@ my %config = (hive          => "Software",
               hasShortDescr => 1,
               hasDescr      => 0,
               hasRefs       => 0,
-              version       => 20160822);
+              version       => 20160823);
 
 sub getConfig{return %config}
 
@@ -69,6 +70,20 @@ sub pluginmain {
 						my $i = c64($ts[0],$ts[1]);
 						$i = $i/10000000;
 						::rptMsg("  Last Duration: ".$i." sec");
+					};
+					
+					eval {
+						@ts = unpack("VV",$s->get_value("Current Duration")->get_data());
+						my $i = c64($ts[0],$ts[1]);
+						$i = $i/10000000;
+						::rptMsg("  Current Duration: ".$i." sec");
+					};
+					
+					eval {
+						@ts = unpack("VV",$s->get_value("Total Duration")->get_data());
+						my $i = c64($ts[0],$ts[1]);
+						$i = $i/10000000;
+						::rptMsg("  Total Duration: ".$i." sec");
 					};
 					
 					eval {

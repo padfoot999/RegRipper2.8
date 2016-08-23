@@ -3,6 +3,8 @@
 # parses LANDESK Monitor Logs
 #
 #
+#  https://community.landesk.com/docs/DOC-3249
+#
 # Change history
 #   20160822 - updated based on client engagement
 #   20130326 - added Wow6432Node path
@@ -63,6 +65,13 @@ sub pluginmain {
 					};
 					
 					eval {
+						@ts = unpack("VV",$s->get_value("Last Duration")->get_data());
+						my $i = c64($ts[0],$ts[1]);
+						$i = $i/10000000;
+						::rptMsg("  Last Duration: ".$i." sec");
+					};
+					
+					eval {
 						@ts = unpack("VV",$s->get_value("First Started")->get_data());
 						::rptMsg("  First Started: ".gmtime(::getTime($ts[0],$ts[1]))." Z");
 					};
@@ -89,7 +98,7 @@ sub pluginmain {
 	
 	::rptMsg("");
 # update added 20130327
-	@paths = ("LANDesk\\Inventory\\LogonHistory\\Logons",
+	my @paths = ("LANDesk\\Inventory\\LogonHistory\\Logons",
 	             "Wow6432Node\\LANDesk\\Inventory\\LogonHistory\\Logons");
 	
 	foreach my $key_path (@paths) {
@@ -117,6 +126,21 @@ sub pluginmain {
 			::rptMsg($key_path." not found\.");
 		}
 	}	
+}
+
+# Thanks to David Cowen for sharing this code
+sub c64 {
+	my $n1 = shift;
+	my $n2 = shift;
+	
+	if ($n2 != 0) {
+		$n2 = ($n2 * 4294967296);
+		my $n = $n1 + $n2;
+		return $n;
+	}
+	else {
+		return $n1;
+	}
 }
 
 1;

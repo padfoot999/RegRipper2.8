@@ -30,6 +30,8 @@ my $VERSION = getVersion();
 my $reg;
 
 sub pluginmain {
+	::logMsg("Launching usbstor2 v.".$VERSION);
+	::rptMsg("usbstor2 v.".$VERSION); # banner
 	my $class = shift;
 	my $hive = shift;
 	$reg = Parse::Win32Registry->new($hive);

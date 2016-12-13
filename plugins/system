@@ -35,6 +35,7 @@ nolmhash
 pagefile
 pending
 phdet
+prefetch
 processor_architecture
 productpolicy
 producttype
@@ -53,9 +54,10 @@ shutdown
 shutdowncount
 stillimage
 svc
+svcdll
 svc_plus
 svc_tln
-svcdll
+systemindex
 termcert
 termserv
 timezone
